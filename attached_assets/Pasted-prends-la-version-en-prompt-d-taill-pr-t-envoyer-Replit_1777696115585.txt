@@ -1,0 +1,449 @@
+prends la version en prompt détaillé prêt à envoyer à Replit pour construire l’application de nettoyage FAP.
+
+Petite correction utile : je suppose que tu veux dire Replit et non “remplit”.
+Autre point important : Replit peut générer une application web complète, mais il faut lui demander une version simple, robuste et progressive, sinon il risque de produire trop de fonctions mal reliées entre elles. Le meilleur choix ici est de demander une application web responsive, utilisable sur tablette/téléphone à l’atelier, avec une base de données intégrée.
+
+Voici le prompt.
+
+⸻
+
+Créer une application web professionnelle de suivi de nettoyage de filtres à particules appelée FAP Expert.
+
+L’objectif de l’application est de permettre à un garage automobile de suivre toutes les étapes d’une intervention de nettoyage FAP, depuis la réception du client jusqu’à la restitution, avec photos, mesures techniques, contrôles obligatoires, génération d’un rapport PDF et historique complet.
+
+L’application doit être claire, rapide, mobile-first, utilisable sur tablette ou smartphone par des mécaniciens en atelier. Elle doit limiter au maximum la saisie libre. Les champs doivent être principalement des boutons, listes déroulantes, cases à cocher, statuts et validations.
+
+Le workflow officiel de l’application doit être exactement celui-ci :
+
+CREATION → CLIENT_VEHICULE → CONTROLE_INITIAL → VALIDATION_RECEPTION → ATELIER_ENTREE → NETTOYAGE → SECHAGE → CONTROLE_FINAL → RESTITUTION → CLOTURE
+
+Ne pas utiliser d’anciens statuts comme “PRISE_EN_CHARGE”.
+Ne pas mélanger avec un ancien workflow.
+
+Créer une interface avec un tableau de bord principal affichant les dossiers FAP en cours, classés par statut. Chaque dossier doit afficher au minimum :
+
+Numéro de dossier
+Date de création
+Client
+Téléphone
+Immatriculation
+Marque / modèle
+Statut actuel
+Alerte si dossier bloqué
+Bouton “ouvrir dossier”
+Bouton “étape suivante” si toutes les conditions sont remplies
+
+Le numéro de dossier doit être automatique au format :
+
+FAP-AAAA-00001
+
+Exemple : FAP-2026-00001
+
+Le compteur doit repartir à zéro chaque année.
+Si cela est trop complexe dans une première version, prévoir au minimum une génération automatique fiable avec année + identifiant unique.
+
+L’application doit contenir les tables principales suivantes :
+
+Table clients :
+
+id
+nom_client
+telephone
+email
+adresse
+created_at
+updated_at
+
+Table vehicules :
+
+id
+client_id
+immatriculation
+vin
+marque
+modele
+motorisation
+kilometrage
+created_at
+updated_at
+
+Table interventions :
+
+id
+numero_dossier
+client_id
+vehicule_id
+statut
+date_creation
+date_client_vehicule
+date_controle_initial
+date_validation_reception
+date_atelier_entree
+date_nettoyage
+date_sechage
+date_controle_final
+date_restitution
+date_cloture
+poids_entree_g
+poids_sortie_g
+pression_entree_mbar
+pression_sortie_mbar
+masse_extraite_g
+efficacite_pression_pourcent
+diagnostic_accessoires
+diagnostic_ceramique
+resultat_final
+preconisation_capteur_pression
+preconisation_egr
+preconisation_regeneration_autoroute
+commentaire_interne
+rapport_pdf_url
+signature_client_url
+created_at
+updated_at
+
+Table medias_intervention :
+
+id
+intervention_id
+type_media
+url
+nom_fichier
+mime_type
+taille_fichier
+created_at
+
+Les types de médias doivent être :
+
+PHOTO_VEHICULE
+PHOTO_FAP_ENTREE
+PHOTO_ACCESSOIRES
+VIDEO_ENDOSCOPE_ENTREE
+PHOTO_NETTOYAGE
+VIDEO_ENDOSCOPE_SORTIE
+PHOTO_FAP_SORTIE
+SIGNATURE_CLIENT
+
+Table historique_intervention :
+
+id
+intervention_id
+ancien_statut
+nouveau_statut
+champ_modifie
+ancienne_valeur
+nouvelle_valeur
+utilisateur
+date_modification
+
+Créer les règles métier suivantes.
+
+À l’étape CREATION, l’utilisateur crée un nouveau dossier.
+Il doit pouvoir saisir ou sélectionner un client et un véhicule.
+
+Pour passer de CREATION à CLIENT_VEHICULE, il faut au minimum :
+
+nom client
+téléphone client
+immatriculation
+marque
+modèle
+kilométrage
+
+Pour passer de CLIENT_VEHICULE à CONTROLE_INITIAL, il faut que les informations client et véhicule soient complètes.
+
+À l’étape CONTROLE_INITIAL, l’utilisateur doit saisir :
+
+poids entrée en grammes
+pression différentielle entrée en mbar
+diagnostic accessoires
+diagnostic céramique
+photos ou vidéo d’entrée
+
+Les valeurs du diagnostic accessoires doivent être :
+
+OK
+SONDE_CASSEE
+TUBES_HS
+GRIPPE
+AUTRE
+
+Les valeurs du diagnostic céramique doivent être :
+
+SAIN
+FISSURE
+FONDU
+HUILE
+COLMATE
+
+Si le diagnostic céramique est FONDU, l’application doit bloquer le passage au nettoyage et afficher un message :
+
+“Nettoyage impossible : céramique fondue. Intervention à refuser ou à clôturer comme non nettoyable.”
+
+Pour passer de CONTROLE_INITIAL à VALIDATION_RECEPTION, il faut obligatoirement :
+
+poids entrée renseigné
+pression entrée renseignée
+diagnostic accessoires renseigné
+diagnostic céramique renseigné
+photo ou vidéo d’entrée ajoutée
+signature client ou validation réception cochée
+
+À l’étape VALIDATION_RECEPTION, l’utilisateur confirme que le client accepte la prise en charge.
+Ajouter une case obligatoire :
+
+“Le client valide la réception et autorise le contrôle/nettoyage du FAP.”
+
+Pour passer à ATELIER_ENTREE, cette validation doit être cochée.
+
+À l’étape ATELIER_ENTREE, l’utilisateur confirme que le FAP est physiquement entré à l’atelier.
+Ajouter bouton :
+
+“Confirmer entrée atelier”
+
+À l’étape NETTOYAGE, l’utilisateur suit l’opération de nettoyage.
+Il doit pouvoir ajouter des photos du nettoyage et indiquer :
+
+nettoyage commencé
+nettoyage terminé
+observation atelier
+
+À l’étape SECHAGE, l’utilisateur confirme que le FAP est en séchage puis séchage terminé.
+
+À l’étape CONTROLE_FINAL, l’utilisateur doit saisir :
+
+poids sortie en grammes
+pression différentielle sortie en mbar
+vidéo ou photo endoscope sortie
+résultat final
+
+Les valeurs du résultat final doivent être :
+
+NETTOYE
+PARTIELLEMENT_NETTOYE
+NON_NETTOYABLE
+REFUSE_ENTREE
+
+L’application doit calculer automatiquement :
+
+masse_extraite_g = poids_entree_g - poids_sortie_g
+
+Si le résultat est négatif, bloquer la validation et afficher :
+
+“Erreur : le poids de sortie ne peut pas être supérieur au poids d’entrée.”
+
+L’application doit aussi calculer :
+
+efficacite_pression_pourcent = ((pression_entree_mbar - pression_sortie_mbar) / pression_entree_mbar) × 100
+
+Si la pression entrée est égale à zéro ou vide, ne pas calculer et afficher :
+
+“Pression d’entrée nécessaire pour calculer l’efficacité.”
+
+Afficher un badge couleur selon le résultat :
+
+Efficacité supérieure ou égale à 50 % : bon résultat
+Efficacité entre 20 % et 49 % : résultat moyen
+Efficacité entre 10 % et 19 % : résultat faible
+Efficacité inférieure à 10 % : alerte, efficacité insuffisante
+
+Pour passer de CONTROLE_FINAL à RESTITUTION, il faut obligatoirement :
+
+poids sortie renseigné
+pression sortie renseignée
+masse extraite calculée
+efficacité calculée
+résultat final renseigné
+photo ou vidéo de sortie ajoutée
+validation technicien cochée
+
+À l’étape RESTITUTION, l’utilisateur doit confirmer :
+
+rapport PDF généré
+client informé
+FAP restitué
+signature client si disponible
+
+Pour passer de RESTITUTION à CLOTURE, il faut :
+
+rapport PDF généré
+restitution confirmée
+validation finale cochée
+
+Une fois le dossier au statut CLOTURE, il ne doit plus être modifiable sauf par un administrateur.
+
+Créer un écran détaillé pour chaque intervention avec les sections suivantes :
+
+1. Informations dossier
+2. Client
+3. Véhicule
+4. Contrôle initial
+5. Validation réception
+6. Atelier entrée
+7. Nettoyage
+8. Séchage
+9. Contrôle final
+10. Restitution
+11. Rapport PDF
+12. Historique
+
+Créer une vue “Kanban” avec les colonnes :
+
+CREATION
+CLIENT_VEHICULE
+CONTROLE_INITIAL
+VALIDATION_RECEPTION
+ATELIER_ENTREE
+NETTOYAGE
+SECHAGE
+CONTROLE_FINAL
+RESTITUTION
+CLOTURE
+
+Chaque carte doit afficher :
+
+numéro dossier
+immatriculation
+client
+statut
+alerte éventuelle
+date de dernière modification
+
+Créer une fonction “Étape suivante” qui vérifie les règles obligatoires avant de changer le statut.
+Si les conditions ne sont pas remplies, afficher clairement les éléments manquants.
+
+Exemple :
+
+“Impossible de passer à l’étape suivante. Éléments manquants : pression entrée, diagnostic céramique, vidéo endoscope entrée.”
+
+Créer une page de statistiques avec :
+
+nombre de dossiers créés
+nombre de dossiers en cours
+nombre de dossiers clôturés
+nombre de FAP nettoyés
+nombre de FAP partiellement nettoyés
+nombre de FAP non nettoyables
+moyenne de masse extraite
+moyenne d’efficacité pression
+dossiers bloqués
+
+Créer une génération de rapport PDF contenant :
+
+Logo du garage
+Nom du garage
+Numéro de dossier
+Date
+Informations client
+Informations véhicule
+Kilométrage
+Diagnostic accessoires
+Diagnostic céramique
+Mesures avant nettoyage
+Mesures après nettoyage
+Masse extraite
+Efficacité pression
+Résultat final
+Préconisations
+Photos principales
+Signature client si disponible
+Mention finale :
+
+“Ce rapport atteste des contrôles et mesures réalisés dans le cadre de l’intervention de nettoyage du filtre à particules. Les résultats sont établis selon les mesures relevées avant et après intervention.”
+
+Prévoir les préconisations sous forme de cases à cocher :
+
+Remplacement capteur pression différentielle conseillé
+Contrôle vanne EGR conseillé
+Régénération autoroute conseillée
+Contrôle injecteurs conseillé
+Contrôle turbo conseillé
+Contrôle consommation huile conseillé
+
+Créer une authentification simple avec rôles :
+
+ADMIN
+ATELIER
+RECEPTION
+LECTURE_SEULE
+
+Le rôle ADMIN peut tout faire.
+Le rôle ATELIER peut modifier les étapes techniques.
+Le rôle RECEPTION peut créer les dossiers, gérer clients/véhicules, valider réception et restitution.
+Le rôle LECTURE_SEULE peut uniquement consulter.
+
+Créer une interface propre, professionnelle, claire, avec une navigation simple :
+
+Tableau de bord
+Nouveau dossier
+Dossiers en cours
+Dossiers clôturés
+Statistiques
+Paramètres
+
+Le design doit être adapté à un garage automobile :
+
+fond clair
+boutons visibles
+gros boutons tactiles
+statuts bien lisibles
+alertes en rouge/orange
+validations en vert
+interface rapide sur mobile
+
+Prévoir une recherche par :
+
+numéro dossier
+immatriculation
+nom client
+téléphone
+VIN
+
+Prévoir un filtre par statut et par date.
+
+Prévoir un mode impression du rapport.
+
+Important : l’application doit être fonctionnelle dès la première version.
+Ne pas créer une architecture trop complexe inutilement.
+Priorité à la fiabilité du workflow, aux validations obligatoires et à la génération du rapport.
+
+Commencer par créer :
+
+1. La base de données
+2. Les modèles de données
+3. Les écrans principaux
+4. Le workflow avec validations
+5. Les calculs automatiques
+6. L’upload photo/vidéo
+7. Le rapport PDF
+8. Le tableau de bord statistiques
+
+Le code doit être propre, commenté, maintenable, avec une séparation claire entre :
+
+frontend
+backend
+base de données
+logique métier
+génération PDF
+
+Utiliser une stack simple compatible Replit, par exemple :
+
+React pour le frontend
+Node.js / Express pour le backend
+SQLite ou PostgreSQL pour la base de données
+Prisma si possible pour gérer les modèles
+Une librairie PDF fiable pour générer les rapports
+
+Créer aussi des données de démonstration pour tester rapidement l’application.
+
+Prévoir au moins trois dossiers exemples :
+
+un dossier nettoyé avec succès
+un dossier partiellement nettoyé
+un dossier bloqué car céramique fondue
+
+L’application doit être en français.
+
+Le vocabulaire doit être professionnel, adapté à un atelier automobile.
+
+Ne pas utiliser de termes anglais visibles dans l’interface utilisateur, sauf si techniquement nécessaire dans le code

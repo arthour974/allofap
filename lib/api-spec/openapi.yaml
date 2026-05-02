@@ -1,22 +1,33 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: FAP Expert - API de suivi de nettoyage de filtres à particules
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentification
+  - name: clients
+    description: Gestion des clients
+  - name: vehicules
+    description: Gestion des véhicules
+  - name: interventions
+    description: Gestion des interventions FAP
+  - name: medias
+    description: Médias des interventions
+  - name: statistiques
+    description: Statistiques et tableaux de bord
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +35,499 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Connexion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginBody"
+      responses:
+        "200":
+          description: Connexion réussie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Identifiants invalides
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Déconnexion
+      responses:
+        "200":
+          description: Déconnexion réussie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [auth]
+      summary: Utilisateur courant
+      responses:
+        "200":
+          description: Utilisateur connecté
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /clients:
+    get:
+      operationId: listClients
+      tags: [clients]
+      summary: Liste des clients
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: Liste des clients
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientsListResponse"
+    post:
+      operationId: createClient
+      tags: [clients]
+      summary: Créer un client
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateClientBody"
+      responses:
+        "201":
+          description: Client créé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+
+  /clients/{id}:
+    get:
+      operationId: getClient
+      tags: [clients]
+      summary: Détail d'un client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Client
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+        "404":
+          description: Client non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateClient
+      tags: [clients]
+      summary: Modifier un client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateClientBody"
+      responses:
+        "200":
+          description: Client modifié
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+
+  /vehicules:
+    get:
+      operationId: listVehicules
+      tags: [vehicules]
+      summary: Liste des véhicules
+      parameters:
+        - name: clientId
+          in: query
+          schema:
+            type: integer
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Liste des véhicules
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehiculesListResponse"
+    post:
+      operationId: createVehicule
+      tags: [vehicules]
+      summary: Créer un véhicule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateVehiculeBody"
+      responses:
+        "201":
+          description: Véhicule créé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vehicule"
+
+  /vehicules/{id}:
+    get:
+      operationId: getVehicule
+      tags: [vehicules]
+      summary: Détail d'un véhicule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Véhicule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vehicule"
+    put:
+      operationId: updateVehicule
+      tags: [vehicules]
+      summary: Modifier un véhicule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateVehiculeBody"
+      responses:
+        "200":
+          description: Véhicule modifié
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vehicule"
+
+  /interventions:
+    get:
+      operationId: listInterventions
+      tags: [interventions]
+      summary: Liste des interventions
+      parameters:
+        - name: statut
+          in: query
+          schema:
+            $ref: "#/components/schemas/StatutIntervention"
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: dateDebut
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: dateFin
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: Liste des interventions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterventionsListResponse"
+    post:
+      operationId: createIntervention
+      tags: [interventions]
+      summary: Créer une intervention
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInterventionBody"
+      responses:
+        "201":
+          description: Intervention créée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterventionDetail"
+
+  /interventions/{id}:
+    get:
+      operationId: getIntervention
+      tags: [interventions]
+      summary: Détail d'une intervention
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Intervention
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterventionDetail"
+        "404":
+          description: Intervention non trouvée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateIntervention
+      tags: [interventions]
+      summary: Modifier une intervention
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateInterventionBody"
+      responses:
+        "200":
+          description: Intervention modifiée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterventionDetail"
+
+  /interventions/{id}/avancer:
+    post:
+      operationId: avancerIntervention
+      tags: [interventions]
+      summary: Passer à l'étape suivante
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Statut mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterventionDetail"
+        "422":
+          description: Conditions non remplies
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorResponse"
+
+  /interventions/{id}/historique:
+    get:
+      operationId: getHistoriqueIntervention
+      tags: [interventions]
+      summary: Historique d'une intervention
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Historique
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HistoriqueEntry"
+
+  /interventions/{id}/rapport-pdf:
+    post:
+      operationId: genererRapportPdf
+      tags: [interventions]
+      summary: Générer le rapport PDF
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Rapport généré
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RapportPdfResponse"
+
+  /interventions/{id}/medias:
+    get:
+      operationId: listMediasIntervention
+      tags: [medias]
+      summary: Médias d'une intervention
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Liste des médias
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Media"
+    post:
+      operationId: ajouterMedia
+      tags: [medias]
+      summary: Ajouter un média (upload base64)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AjouterMediaBody"
+      responses:
+        "201":
+          description: Média ajouté
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Media"
+
+  /medias/{mediaId}:
+    delete:
+      operationId: supprimerMedia
+      tags: [medias]
+      summary: Supprimer un média
+      parameters:
+        - name: mediaId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Média supprimé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /statistiques/dashboard:
+    get:
+      operationId: getDashboardStats
+      tags: [statistiques]
+      summary: Statistiques du tableau de bord
+      responses:
+        "200":
+          description: Statistiques
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /statistiques/kanban:
+    get:
+      operationId: getKanbanData
+      tags: [statistiques]
+      summary: Données pour la vue Kanban
+      responses:
+        "200":
+          description: Données Kanban
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KanbanData"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +538,782 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+      required:
+        - error
+        - message
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        champsManquants:
+          type: array
+          items:
+            type: string
+      required:
+        - error
+        - champsManquants
+
+    StatutIntervention:
+      type: string
+      enum:
+        - CREATION
+        - CLIENT_VEHICULE
+        - CONTROLE_INITIAL
+        - VALIDATION_RECEPTION
+        - ATELIER_ENTREE
+        - NETTOYAGE
+        - SECHAGE
+        - CONTROLE_FINAL
+        - RESTITUTION
+        - CLOTURE
+
+    DiagnosticAccessoires:
+      type: string
+      enum:
+        - OK
+        - SONDE_CASSEE
+        - TUBES_HS
+        - GRIPPE
+        - AUTRE
+
+    DiagnosticCeramique:
+      type: string
+      enum:
+        - SAIN
+        - FISSURE
+        - FONDU
+        - HUILE
+        - COLMATE
+
+    ResultatFinal:
+      type: string
+      enum:
+        - NETTOYE
+        - PARTIELLEMENT_NETTOYE
+        - NON_NETTOYABLE
+        - REFUSE_ENTREE
+
+    UserRole:
+      type: string
+      enum:
+        - ADMIN
+        - ATELIER
+        - RECEPTION
+        - LECTURE_SEULE
+
+    LoginBody:
+      type: object
+      properties:
+        identifiant:
+          type: string
+        motDePasse:
+          type: string
+      required:
+        - identifiant
+        - motDePasse
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        message:
+          type: string
+      required:
+        - user
+        - message
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        identifiant:
+          type: string
+        nom:
+          type: string
+        role:
+          $ref: "#/components/schemas/UserRole"
+      required:
+        - id
+        - identifiant
+        - nom
+        - role
+
+    Client:
+      type: object
+      properties:
+        id:
+          type: integer
+        nomClient:
+          type: string
+        telephone:
+          type: string
+        email:
+          type: string
+          nullable: true
+        adresse:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - nomClient
+        - telephone
+        - createdAt
+        - updatedAt
+
+    ClientsListResponse:
+      type: object
+      properties:
+        clients:
+          type: array
+          items:
+            $ref: "#/components/schemas/Client"
+        total:
+          type: integer
+      required:
+        - clients
+        - total
+
+    CreateClientBody:
+      type: object
+      properties:
+        nomClient:
+          type: string
+        telephone:
+          type: string
+        email:
+          type: string
+          nullable: true
+        adresse:
+          type: string
+          nullable: true
+      required:
+        - nomClient
+        - telephone
+
+    UpdateClientBody:
+      type: object
+      properties:
+        nomClient:
+          type: string
+        telephone:
+          type: string
+        email:
+          type: string
+          nullable: true
+        adresse:
+          type: string
+          nullable: true
+
+    Vehicule:
+      type: object
+      properties:
+        id:
+          type: integer
+        clientId:
+          type: integer
+        immatriculation:
+          type: string
+        vin:
+          type: string
+          nullable: true
+        marque:
+          type: string
+        modele:
+          type: string
+        motorisation:
+          type: string
+          nullable: true
+        kilometrage:
+          type: integer
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - clientId
+        - immatriculation
+        - marque
+        - modele
+        - createdAt
+        - updatedAt
+
+    VehiculesListResponse:
+      type: object
+      properties:
+        vehicules:
+          type: array
+          items:
+            $ref: "#/components/schemas/Vehicule"
+        total:
+          type: integer
+      required:
+        - vehicules
+        - total
+
+    CreateVehiculeBody:
+      type: object
+      properties:
+        clientId:
+          type: integer
+        immatriculation:
+          type: string
+        vin:
+          type: string
+          nullable: true
+        marque:
+          type: string
+        modele:
+          type: string
+        motorisation:
+          type: string
+          nullable: true
+        kilometrage:
+          type: integer
+          nullable: true
+      required:
+        - clientId
+        - immatriculation
+        - marque
+        - modele
+
+    UpdateVehiculeBody:
+      type: object
+      properties:
+        immatriculation:
+          type: string
+        vin:
+          type: string
+          nullable: true
+        marque:
+          type: string
+        modele:
+          type: string
+        motorisation:
+          type: string
+          nullable: true
+        kilometrage:
+          type: integer
+          nullable: true
+
+    InterventionSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        numeroDossier:
+          type: string
+        statut:
+          $ref: "#/components/schemas/StatutIntervention"
+        dateCreation:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        client:
+          $ref: "#/components/schemas/Client"
+        vehicule:
+          $ref: "#/components/schemas/Vehicule"
+        alerte:
+          type: string
+          nullable: true
+        resultatFinal:
+          $ref: "#/components/schemas/ResultatFinal"
+          nullable: true
+      required:
+        - id
+        - numeroDossier
+        - statut
+        - dateCreation
+        - updatedAt
+        - client
+        - vehicule
+
+    InterventionDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        numeroDossier:
+          type: string
+        statut:
+          $ref: "#/components/schemas/StatutIntervention"
+        dateCreation:
+          type: string
+          format: date-time
+        dateClientVehicule:
+          type: string
+          format: date-time
+          nullable: true
+        dateControleInitial:
+          type: string
+          format: date-time
+          nullable: true
+        dateValidationReception:
+          type: string
+          format: date-time
+          nullable: true
+        dateAtelierEntree:
+          type: string
+          format: date-time
+          nullable: true
+        dateNettoyage:
+          type: string
+          format: date-time
+          nullable: true
+        dateSechage:
+          type: string
+          format: date-time
+          nullable: true
+        dateControleFinal:
+          type: string
+          format: date-time
+          nullable: true
+        dateRestitution:
+          type: string
+          format: date-time
+          nullable: true
+        dateCloture:
+          type: string
+          format: date-time
+          nullable: true
+        poidsEntreeG:
+          type: number
+          nullable: true
+        poidsSortieG:
+          type: number
+          nullable: true
+        pressionEntreeMbar:
+          type: number
+          nullable: true
+        pressionSortieMbar:
+          type: number
+          nullable: true
+        masseExtraiteg:
+          type: number
+          nullable: true
+        efficacitePrensionPourcent:
+          type: number
+          nullable: true
+        diagnosticAccessoires:
+          $ref: "#/components/schemas/DiagnosticAccessoires"
+          nullable: true
+        diagnosticCeramique:
+          $ref: "#/components/schemas/DiagnosticCeramique"
+          nullable: true
+        resultatFinal:
+          $ref: "#/components/schemas/ResultatFinal"
+          nullable: true
+        preconisationCapteurPression:
+          type: boolean
+          nullable: true
+        preconisationEgr:
+          type: boolean
+          nullable: true
+        preconisationRegenerationAutoroute:
+          type: boolean
+          nullable: true
+        preconisationControlInjecteurs:
+          type: boolean
+          nullable: true
+        preconisationControlTurbo:
+          type: boolean
+          nullable: true
+        preconisationControlConsommationHuile:
+          type: boolean
+          nullable: true
+        validationClientReception:
+          type: boolean
+          nullable: true
+        validationEntreeAtelier:
+          type: boolean
+          nullable: true
+        nettoyageCommence:
+          type: boolean
+          nullable: true
+        nettoyageTermine:
+          type: boolean
+          nullable: true
+        observationAtelier:
+          type: string
+          nullable: true
+        sechageCommence:
+          type: boolean
+          nullable: true
+        sechageTermine:
+          type: boolean
+          nullable: true
+        validationTechnicien:
+          type: boolean
+          nullable: true
+        rapportPdfGenere:
+          type: boolean
+          nullable: true
+        clientInforme:
+          type: boolean
+          nullable: true
+        fapRestitue:
+          type: boolean
+          nullable: true
+        validationFinale:
+          type: boolean
+          nullable: true
+        commentaireInterne:
+          type: string
+          nullable: true
+        rapportPdfUrl:
+          type: string
+          nullable: true
+        signatureClientUrl:
+          type: string
+          nullable: true
+        alerte:
+          type: string
+          nullable: true
+        client:
+          $ref: "#/components/schemas/Client"
+        vehicule:
+          $ref: "#/components/schemas/Vehicule"
+        medias:
+          type: array
+          items:
+            $ref: "#/components/schemas/Media"
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - numeroDossier
+        - statut
+        - dateCreation
+        - client
+        - vehicule
+        - medias
+        - updatedAt
+
+    InterventionsListResponse:
+      type: object
+      properties:
+        interventions:
+          type: array
+          items:
+            $ref: "#/components/schemas/InterventionSummary"
+        total:
+          type: integer
+      required:
+        - interventions
+        - total
+
+    CreateInterventionBody:
+      type: object
+      properties:
+        clientId:
+          type: integer
+          nullable: true
+        vehiculeId:
+          type: integer
+          nullable: true
+        client:
+          $ref: "#/components/schemas/CreateClientBody"
+          nullable: true
+        vehicule:
+          $ref: "#/components/schemas/CreateVehiculeBody"
+          nullable: true
+      required: []
+
+    UpdateInterventionBody:
+      type: object
+      properties:
+        poidsEntreeG:
+          type: number
+          nullable: true
+        poidsSortieG:
+          type: number
+          nullable: true
+        pressionEntreeMbar:
+          type: number
+          nullable: true
+        pressionSortieMbar:
+          type: number
+          nullable: true
+        diagnosticAccessoires:
+          $ref: "#/components/schemas/DiagnosticAccessoires"
+          nullable: true
+        diagnosticCeramique:
+          $ref: "#/components/schemas/DiagnosticCeramique"
+          nullable: true
+        resultatFinal:
+          $ref: "#/components/schemas/ResultatFinal"
+          nullable: true
+        preconisationCapteurPression:
+          type: boolean
+          nullable: true
+        preconisationEgr:
+          type: boolean
+          nullable: true
+        preconisationRegenerationAutoroute:
+          type: boolean
+          nullable: true
+        preconisationControlInjecteurs:
+          type: boolean
+          nullable: true
+        preconisationControlTurbo:
+          type: boolean
+          nullable: true
+        preconisationControlConsommationHuile:
+          type: boolean
+          nullable: true
+        validationClientReception:
+          type: boolean
+          nullable: true
+        validationEntreeAtelier:
+          type: boolean
+          nullable: true
+        nettoyageCommence:
+          type: boolean
+          nullable: true
+        nettoyageTermine:
+          type: boolean
+          nullable: true
+        observationAtelier:
+          type: string
+          nullable: true
+        sechageCommence:
+          type: boolean
+          nullable: true
+        sechageTermine:
+          type: boolean
+          nullable: true
+        validationTechnicien:
+          type: boolean
+          nullable: true
+        rapportPdfGenere:
+          type: boolean
+          nullable: true
+        clientInforme:
+          type: boolean
+          nullable: true
+        fapRestitue:
+          type: boolean
+          nullable: true
+        validationFinale:
+          type: boolean
+          nullable: true
+        commentaireInterne:
+          type: string
+          nullable: true
+        signatureClientUrl:
+          type: string
+          nullable: true
+
+    Media:
+      type: object
+      properties:
+        id:
+          type: integer
+        interventionId:
+          type: integer
+        typeMedia:
+          type: string
+          enum:
+            - PHOTO_VEHICULE
+            - PHOTO_FAP_ENTREE
+            - PHOTO_ACCESSOIRES
+            - VIDEO_ENDOSCOPE_ENTREE
+            - PHOTO_NETTOYAGE
+            - VIDEO_ENDOSCOPE_SORTIE
+            - PHOTO_FAP_SORTIE
+            - SIGNATURE_CLIENT
+        url:
+          type: string
+        nomFichier:
+          type: string
+        mimeType:
+          type: string
+        tailleFichier:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - interventionId
+        - typeMedia
+        - url
+        - nomFichier
+        - mimeType
+        - tailleFichier
+        - createdAt
+
+    AjouterMediaBody:
+      type: object
+      properties:
+        typeMedia:
+          type: string
+          enum:
+            - PHOTO_VEHICULE
+            - PHOTO_FAP_ENTREE
+            - PHOTO_ACCESSOIRES
+            - VIDEO_ENDOSCOPE_ENTREE
+            - PHOTO_NETTOYAGE
+            - VIDEO_ENDOSCOPE_SORTIE
+            - PHOTO_FAP_SORTIE
+            - SIGNATURE_CLIENT
+        nomFichier:
+          type: string
+        mimeType:
+          type: string
+        dataBase64:
+          type: string
+      required:
+        - typeMedia
+        - nomFichier
+        - mimeType
+        - dataBase64
+
+    RapportPdfResponse:
+      type: object
+      properties:
+        url:
+          type: string
+        message:
+          type: string
+      required:
+        - url
+        - message
+
+    HistoriqueEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        interventionId:
+          type: integer
+        ancienStatut:
+          type: string
+          nullable: true
+        nouveauStatut:
+          type: string
+          nullable: true
+        champModifie:
+          type: string
+          nullable: true
+        ancienneValeur:
+          type: string
+          nullable: true
+        nouvelleValeur:
+          type: string
+          nullable: true
+        utilisateur:
+          type: string
+          nullable: true
+        dateModification:
+          type: string
+          format: date-time
+      required:
+        - id
+        - interventionId
+        - dateModification
+
+    DashboardStats:
+      type: object
+      properties:
+        totalDossiers:
+          type: integer
+        dosssiersEnCours:
+          type: integer
+        dossiersClotures:
+          type: integer
+        fapNettoyes:
+          type: integer
+        fapPartiellementNettoyes:
+          type: integer
+        fapNonNettoyables:
+          type: integer
+        moyenneMasseExtraiteG:
+          type: number
+          nullable: true
+        moyenneEfficacitePourcent:
+          type: number
+          nullable: true
+        dossiersBlockes:
+          type: integer
+        parStatut:
+          type: array
+          items:
+            $ref: "#/components/schemas/StatutCount"
+      required:
+        - totalDossiers
+        - dosssiersEnCours
+        - dossiersClotures
+        - fapNettoyes
+        - fapPartiellementNettoyes
+        - fapNonNettoyables
+        - dossiersBlockes
+        - parStatut
+
+    StatutCount:
+      type: object
+      properties:
+        statut:
+          $ref: "#/components/schemas/StatutIntervention"
+        count:
+          type: integer
+      required:
+        - statut
+        - count
+
+    KanbanData:
+      type: object
+      properties:
+        colonnes:
+          type: array
+          items:
+            $ref: "#/components/schemas/KanbanColonne"
+      required:
+        - colonnes
+
+    KanbanColonne:
+      type: object
+      properties:
+        statut:
+          $ref: "#/components/schemas/StatutIntervention"
+        label:
+          type: string
+        interventions:
+          type: array
+          items:
+            $ref: "#/components/schemas/InterventionSummary"
+      required:
+        - statut
+        - label
+        - interventions
