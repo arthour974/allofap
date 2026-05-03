@@ -284,7 +284,7 @@ export default function DetailIntervention() {
 
           <TabsContent value="workflow" className="space-y-6">
             {/* Contrôle Initial */}
-            <Card className={currentStatutIndex >= WORKFLOW_ORDER.indexOf(StatutIntervention.CONTROLE_INITIAL) ? "border-primary/20 shadow-sm" : "opacity-50 pointer-events-none"}>
+            <Card className={`shadow-sm ${currentStatutIndex === WORKFLOW_ORDER.indexOf(StatutIntervention.CONTROLE_INITIAL) ? "border-primary border-2" : "border-slate-200"} ${isTermine ? "opacity-60 pointer-events-none" : ""}`}>
               <CardHeader className="bg-slate-50 border-b pb-4">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg flex items-center gap-2">
@@ -340,7 +340,7 @@ export default function DetailIntervention() {
             </Card>
 
             {/* Validation Réception */}
-            <Card className={currentStatutIndex >= WORKFLOW_ORDER.indexOf(StatutIntervention.VALIDATION_RECEPTION) ? "border-primary/20 shadow-sm" : "opacity-50 pointer-events-none"}>
+            <Card className={`shadow-sm ${currentStatutIndex === WORKFLOW_ORDER.indexOf(StatutIntervention.VALIDATION_RECEPTION) ? "border-primary border-2" : "border-slate-200"} ${isTermine ? "opacity-60 pointer-events-none" : ""}`}>
               <CardHeader className="bg-slate-50 border-b pb-4">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-sm font-bold text-slate-600">2</div>
@@ -365,7 +365,7 @@ export default function DetailIntervention() {
             </Card>
 
             {/* Atelier Entrée & Nettoyage */}
-            <Card className={currentStatutIndex >= WORKFLOW_ORDER.indexOf(StatutIntervention.ATELIER_ENTREE) ? "border-primary/20 shadow-sm" : "opacity-50 pointer-events-none"}>
+            <Card className={`shadow-sm ${currentStatutIndex >= WORKFLOW_ORDER.indexOf(StatutIntervention.ATELIER_ENTREE) && currentStatutIndex <= WORKFLOW_ORDER.indexOf(StatutIntervention.NETTOYAGE) ? "border-primary border-2" : "border-slate-200"} ${isTermine ? "opacity-60 pointer-events-none" : ""}`}>
               <CardHeader className="bg-slate-50 border-b pb-4">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-sm font-bold text-slate-600">3</div>
@@ -427,7 +427,7 @@ export default function DetailIntervention() {
             </Card>
 
             {/* Séchage */}
-            <Card className={currentStatutIndex >= WORKFLOW_ORDER.indexOf(StatutIntervention.SECHAGE) ? "border-primary/20 shadow-sm" : "opacity-50 pointer-events-none"}>
+            <Card className={`shadow-sm ${currentStatutIndex === WORKFLOW_ORDER.indexOf(StatutIntervention.SECHAGE) ? "border-primary border-2" : "border-slate-200"} ${isTermine ? "opacity-60 pointer-events-none" : ""}`}>
               <CardHeader className="bg-slate-50 border-b pb-4">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-sm font-bold text-slate-600">4</div>
@@ -463,7 +463,7 @@ export default function DetailIntervention() {
             </Card>
 
             {/* Contrôle Final */}
-            <Card className={currentStatutIndex >= WORKFLOW_ORDER.indexOf(StatutIntervention.CONTROLE_FINAL) ? "border-primary/20 shadow-sm" : "opacity-50 pointer-events-none"}>
+            <Card className={`shadow-sm ${currentStatutIndex === WORKFLOW_ORDER.indexOf(StatutIntervention.CONTROLE_FINAL) ? "border-primary border-2" : "border-slate-200"} ${isTermine ? "opacity-60 pointer-events-none" : ""}`}>
               <CardHeader className="bg-slate-50 border-b pb-4">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg flex items-center gap-2">
@@ -541,7 +541,7 @@ export default function DetailIntervention() {
             </Card>
 
             {/* Préconisations & Restitution */}
-            <Card className={currentStatutIndex >= WORKFLOW_ORDER.indexOf(StatutIntervention.RESTITUTION) ? "border-primary/20 shadow-sm" : "opacity-50 pointer-events-none"}>
+            <Card className={`shadow-sm ${currentStatutIndex === WORKFLOW_ORDER.indexOf(StatutIntervention.RESTITUTION) ? "border-primary border-2" : "border-slate-200"} ${isTermine ? "opacity-60 pointer-events-none" : ""}`}>
               <CardHeader className="bg-slate-50 border-b pb-4">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-sm font-bold text-slate-600">6</div>
