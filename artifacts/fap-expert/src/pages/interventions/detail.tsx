@@ -9,10 +9,13 @@ import {
   useGenererRapportPdf,
   useGetHistoriqueIntervention,
   getGetHistoriqueInterventionQueryKey,
+  useAjouterMedia,
+  useSupprimerMedia,
   StatutIntervention,
   DiagnosticAccessoires,
   DiagnosticCeramique,
-  ResultatFinal
+  ResultatFinal,
+  AjouterMediaBodyTypeMedia,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -22,7 +25,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { STATUT_LABELS, STATUT_COLORS, WORKFLOW_ORDER } from "@/lib/constants";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { AlertCircle, CheckCircle, ChevronRight, FileText, Download, Save, AlertTriangle } from "lucide-react";
+import { AlertCircle, CheckCircle, ChevronRight, FileText, Download, Save, AlertTriangle, Upload, Trash2, Image, Video } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -81,6 +84,56 @@ export default function DetailIntervention() {
     }
   });
 
+  const [uploadingMedia, setUploadingMedia] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const ajouterMediaMutation = useAjouterMedia({
+    mutation: {
+      onSuccess: () => {
+        toast({ title: "Média ajouté", description: "Le fichier a été ajouté avec succès." });
+        queryClient.invalidateQueries({ queryKey: getGetInterventionQueryKey(id) });
+      },
+      onError: () => {
+        toast({ title: "Erreur", description: "Impossible d'ajouter le média.", variant: "destructive" });
+      }
+    }
+  });
+
+  const supprimerMediaMutation = useSupprimerMedia({
+    mutation: {
+      onSuccess: () => {
+        toast({ title: "Supprimé", description: "Le média a été supprimé." });
+        queryClient.invalidateQueries({ queryKey: getGetInterventionQueryKey(id) });
+      },
+      onError: () => {
+        toast({ title: "Erreur", description: "Impossible de supprimer le média.", variant: "destructive" });
+      }
+    }
+  });
+
+  const handleFileUpload = useCallback(async (file: File, typeMedia: string) => {
+    setUploadingMedia(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const dataBase64 = e.target?.result as string;
+        await ajouterMediaMutation.mutateAsync({
+          id,
+          data: {
+            typeMedia: typeMedia as typeof AjouterMediaBodyTypeMedia[keyof typeof AjouterMediaBodyTypeMedia],
+            nomFichier: file.name,
+            mimeType: file.type,
+            dataBase64,
+          }
+        });
+        setUploadingMedia(false);
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      setUploadingMedia(false);
+    }
+  }, [id, ajouterMediaMutation]);
+
   const genererPdfMutation = useGenererRapportPdf({
     mutation: {
       onSuccess: (data) => {
@@ -110,11 +163,13 @@ export default function DetailIntervention() {
         nettoyageCommence: intervention.nettoyageCommence || false,
         nettoyageTermine: intervention.nettoyageTermine || false,
         observationAtelier: intervention.observationAtelier || "",
+        validationEntreeAtelier: intervention.validationEntreeAtelier || false,
         sechageCommence: intervention.sechageCommence || false,
         sechageTermine: intervention.sechageTermine || false,
         poidsSortieG: intervention.poidsSortieG || "",
         pressionSortieMbar: intervention.pressionSortieMbar || "",
         resultatFinal: intervention.resultatFinal || "",
+        validationTechnicien: intervention.validationTechnicien || false,
         preconisationCapteurPression: intervention.preconisationCapteurPression || false,
         preconisationEgr: intervention.preconisationEgr || false,
         preconisationRegenerationAutoroute: intervention.preconisationRegenerationAutoroute || false,
@@ -318,6 +373,19 @@ export default function DetailIntervention() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-6">
+                <div className="flex items-center space-x-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <Checkbox 
+                    id="validationEntreeAtelier" 
+                    checked={formData.validationEntreeAtelier} 
+                    onCheckedChange={(c) => {
+                      handleChange("validationEntreeAtelier", !!c);
+                      handleSave(["validationEntreeAtelier"]);
+                    }}
+                  />
+                  <Label htmlFor="validationEntreeAtelier" className="text-base font-medium cursor-pointer">
+                    Entrée atelier confirmée — le FAP est bien en atelier
+                  </Label>
+                </div>
                 <div className="flex flex-col sm:flex-row gap-6 p-4 bg-blue-50/50 rounded-lg border border-blue-100">
                   <div className="flex items-center space-x-3">
                     <Checkbox 
@@ -454,6 +522,20 @@ export default function DetailIntervention() {
                       <SelectItem value={ResultatFinal.NON_NETTOYABLE}>Non nettoyable</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className="flex items-center space-x-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <Checkbox 
+                    id="validationTechnicien" 
+                    checked={formData.validationTechnicien} 
+                    onCheckedChange={(c) => {
+                      handleChange("validationTechnicien", !!c);
+                      handleSave(["validationTechnicien"]);
+                    }}
+                  />
+                  <Label htmlFor="validationTechnicien" className="text-base font-medium cursor-pointer">
+                    Contrôle final validé par le technicien
+                  </Label>
                 </div>
               </CardContent>
             </Card>
@@ -600,16 +682,145 @@ export default function DetailIntervention() {
             </Card>
           </TabsContent>
           
-          <TabsContent value="medias">
-             <Card>
-              <CardHeader className="bg-slate-50 border-b">
-                <CardTitle>Médias & Photos</CardTitle>
-                <CardDescription>Bientôt disponible : ajout de photos avant/après nettoyage.</CardDescription>
+          <TabsContent value="medias" className="space-y-4">
+            {/* Upload zone */}
+            <Card>
+              <CardHeader className="bg-slate-50 border-b pb-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-lg">Médias & Photos</CardTitle>
+                    <CardDescription className="mt-1">Photos FAP entrée/sortie, vidéos endoscope, photos véhicule</CardDescription>
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingMedia || isTermine}
+                    className="gap-2"
+                  >
+                    <Upload className="w-4 h-4" />
+                    {uploadingMedia ? "Envoi..." : "Ajouter un fichier"}
+                  </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*,video/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const isVideo = file.type.startsWith("video/");
+                      const typeMedia = isVideo ? AjouterMediaBodyTypeMedia.VIDEO_ENDOSCOPE_ENTREE : AjouterMediaBodyTypeMedia.PHOTO_FAP_ENTREE;
+                      handleFileUpload(file, typeMedia);
+                      e.target.value = "";
+                    }}
+                  />
+                </div>
               </CardHeader>
-              <CardContent className="p-12 text-center text-slate-500">
-                L'ajout de médias sera disponible dans une prochaine version.
+              <CardContent className="p-6">
+                {intervention.medias && intervention.medias.length > 0 ? (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {intervention.medias.map((media) => {
+                      const isVideo = media.mimeType?.startsWith("video/");
+                      const typeLabel: Record<string, string> = {
+                        PHOTO_FAP_ENTREE: "FAP Entrée",
+                        PHOTO_FAP_SORTIE: "FAP Sortie",
+                        PHOTO_VEHICULE: "Véhicule",
+                        PHOTO_ACCESSOIRES: "Accessoires",
+                        PHOTO_NETTOYAGE: "Nettoyage",
+                        VIDEO_ENDOSCOPE_ENTREE: "Endoscope Entrée",
+                        VIDEO_ENDOSCOPE_SORTIE: "Endoscope Sortie",
+                        SIGNATURE_CLIENT: "Signature",
+                      };
+                      return (
+                        <div key={media.id} className="relative group rounded-lg overflow-hidden border border-slate-200 bg-slate-50 aspect-square flex flex-col items-center justify-center">
+                          {isVideo ? (
+                            <video src={media.url} className="w-full h-full object-cover" controls />
+                          ) : (
+                            <img src={media.url} alt={media.nomFichier || "photo"} className="w-full h-full object-cover" />
+                          )}
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-2">
+                            <span className="text-white text-xs font-medium text-center">{typeLabel[media.typeMedia] || media.typeMedia}</span>
+                            {!isTermine && (
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                className="h-7 text-xs gap-1"
+                                onClick={() => supprimerMediaMutation.mutate({ mediaId: media.id })}
+                                disabled={supprimerMediaMutation.isPending}
+                              >
+                                <Trash2 className="w-3 h-3" /> Supprimer
+                              </Button>
+                            )}
+                          </div>
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-1.5 flex items-center gap-1">
+                            {isVideo ? <Video className="w-3 h-3 shrink-0" /> : <Image className="w-3 h-3 shrink-0" />}
+                            <span className="truncate">{typeLabel[media.typeMedia] || media.typeMedia}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="py-16 flex flex-col items-center justify-center text-slate-400 gap-3">
+                    <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
+                      <Image className="w-8 h-8 text-slate-300" />
+                    </div>
+                    <p className="font-medium text-slate-500">Aucun média ajouté</p>
+                    <p className="text-sm text-center max-w-xs">Ajoutez des photos ou vidéos (FAP avant/après nettoyage, véhicule, endoscope…)</p>
+                    {!isTermine && (
+                      <Button variant="outline" size="sm" className="mt-2 gap-2" onClick={() => fileInputRef.current?.click()}>
+                        <Upload className="w-4 h-4" /> Ajouter un fichier
+                      </Button>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
+
+            {/* Upload rapide par catégorie */}
+            {!isTermine && (
+              <Card>
+                <CardHeader className="bg-slate-50 border-b pb-3">
+                  <CardTitle className="text-base">Ajout rapide par catégorie</CardTitle>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: "Photo FAP Entrée", type: AjouterMediaBodyTypeMedia.PHOTO_FAP_ENTREE, accept: "image/*" },
+                      { label: "Photo FAP Sortie", type: AjouterMediaBodyTypeMedia.PHOTO_FAP_SORTIE, accept: "image/*" },
+                      { label: "Vidéo Endoscope Entrée", type: AjouterMediaBodyTypeMedia.VIDEO_ENDOSCOPE_ENTREE, accept: "video/*" },
+                      { label: "Vidéo Endoscope Sortie", type: AjouterMediaBodyTypeMedia.VIDEO_ENDOSCOPE_SORTIE, accept: "video/*" },
+                      { label: "Photo Véhicule", type: AjouterMediaBodyTypeMedia.PHOTO_VEHICULE, accept: "image/*" },
+                      { label: "Photo Accessoires", type: AjouterMediaBodyTypeMedia.PHOTO_ACCESSOIRES, accept: "image/*" },
+                      { label: "Photo Nettoyage", type: AjouterMediaBodyTypeMedia.PHOTO_NETTOYAGE, accept: "image/*" },
+                    ].map((item) => (
+                      <label
+                        key={item.type}
+                        className="flex flex-col items-center gap-2 p-3 border-2 border-dashed border-slate-200 rounded-lg cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors text-center"
+                      >
+                        <input
+                          type="file"
+                          accept={item.accept}
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            handleFileUpload(file, item.type);
+                            e.target.value = "";
+                          }}
+                        />
+                        {item.accept === "video/*" ? (
+                          <Video className="w-6 h-6 text-slate-400" />
+                        ) : (
+                          <Image className="w-6 h-6 text-slate-400" />
+                        )}
+                        <span className="text-xs font-medium text-slate-600 leading-tight">{item.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="historique">

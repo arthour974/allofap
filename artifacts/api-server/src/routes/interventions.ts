@@ -295,15 +295,10 @@ function verifierConditions(
       break;
 
     case "CONTROLE_INITIAL": {
-      if (!intervention.poidsEntreeG) manquants.push("Poids d'entrée");
-      if (!intervention.pressionEntreeMbar) manquants.push("Pression d'entrée");
+      if (!intervention.poidsEntreeG) manquants.push("Poids d'entrée (g)");
+      if (!intervention.pressionEntreeMbar) manquants.push("Pression d'entrée (mbar)");
       if (!intervention.diagnosticAccessoires) manquants.push("Diagnostic accessoires");
       if (!intervention.diagnosticCeramique) manquants.push("Diagnostic céramique");
-      const hasMediaEntree = medias.some(m =>
-        m.typeMedia === "PHOTO_FAP_ENTREE" || m.typeMedia === "VIDEO_ENDOSCOPE_ENTREE" || m.typeMedia === "PHOTO_VEHICULE"
-      );
-      if (!hasMediaEntree) manquants.push("Photo ou vidéo d'entrée");
-      if (!intervention.validationClientReception) manquants.push("Signature client / validation réception");
       if (intervention.diagnosticCeramique === "FONDU") {
         manquants.push("Céramique fondue : nettoyage impossible — clôturer le dossier comme non nettoyable");
       }
@@ -318,7 +313,7 @@ function verifierConditions(
 
     case "ATELIER_ENTREE":
       if (!intervention.validationEntreeAtelier) {
-        manquants.push("Confirmation entrée atelier");
+        manquants.push("Confirmation d'entrée atelier requise");
       }
       break;
 
@@ -335,13 +330,9 @@ function verifierConditions(
       break;
 
     case "CONTROLE_FINAL": {
-      if (!intervention.poidsSortieG) manquants.push("Poids de sortie");
-      if (!intervention.pressionSortieMbar) manquants.push("Pression de sortie");
+      if (!intervention.poidsSortieG) manquants.push("Poids de sortie (g)");
+      if (!intervention.pressionSortieMbar) manquants.push("Pression de sortie (mbar)");
       if (!intervention.resultatFinal) manquants.push("Résultat final");
-      const hasMediaSortie = medias.some(m =>
-        m.typeMedia === "PHOTO_FAP_SORTIE" || m.typeMedia === "VIDEO_ENDOSCOPE_SORTIE"
-      );
-      if (!hasMediaSortie) manquants.push("Photo ou vidéo de sortie");
       if (!intervention.validationTechnicien) manquants.push("Validation technicien");
 
       if (intervention.poidsSortieG && intervention.poidsEntreeG) {
@@ -356,8 +347,8 @@ function verifierConditions(
 
     case "RESTITUTION":
       if (!intervention.rapportPdfGenere) manquants.push("Rapport PDF généré");
+      if (!intervention.clientInforme) manquants.push("Client informé");
       if (!intervention.fapRestitue) manquants.push("FAP restitué au client");
-      if (!intervention.validationFinale) manquants.push("Validation finale");
       break;
 
     case "CLOTURE":
@@ -471,6 +462,124 @@ router.post("/interventions/:id/rapport-pdf", async (req, res) => {
     .where(eq(interventionsTable.id, id));
 
   res.json({ url: pdfUrl, message: "Rapport PDF généré avec succès" });
+});
+
+router.get("/interventions/:id/rapport-pdf/download", async (req, res) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "BAD_REQUEST", message: "ID invalide" });
+    return;
+  }
+
+  const full = await getInterventionFull(id);
+  if (!full) {
+    res.status(404).json({ error: "NOT_FOUND", message: "Intervention introuvable" });
+    return;
+  }
+
+  const STATUT_LABELS: Record<string, string> = {
+    CREATION: "Création", CLIENT_VEHICULE: "Client & Véhicule", CONTROLE_INITIAL: "Contrôle Initial",
+    VALIDATION_RECEPTION: "Validation Réception", ATELIER_ENTREE: "Entrée Atelier", NETTOYAGE: "Nettoyage",
+    SECHAGE: "Séchage", CONTROLE_FINAL: "Contrôle Final", RESTITUTION: "Restitution", CLOTURE: "Clôturé",
+  };
+  const RESULTAT_LABELS: Record<string, string> = {
+    NETTOYE: "Nettoyé avec succès", PARTIELLEMENT_NETTOYE: "Partiellement nettoyé", NON_NETTOYABLE: "Non nettoyable",
+  };
+  const DIAG_LABELS: Record<string, string> = {
+    OK: "OK", SONDE_CASSEE: "Sonde cassée", TUBES_HS: "Tubes HS", GRIPPE: "Grippé", AUTRE: "Autre",
+    SAIN: "Sain", FISSURE: "Fissuré", FONDU: "Fondu", HUILE: "Plein d'huile", COLMATE: "Colmaté",
+  };
+  const d = new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
+  const masseExtraite = full.poidsEntreeG && full.poidsSortieG ? (Number(full.poidsEntreeG) - Number(full.poidsSortieG)).toFixed(0) + " g" : "-";
+  const efficacite = full.pressionEntreeMbar && full.pressionSortieMbar
+    ? (((Number(full.pressionEntreeMbar) - Number(full.pressionSortieMbar)) / Number(full.pressionEntreeMbar)) * 100).toFixed(1) + " %"
+    : "-";
+
+  const preconisations = [];
+  if (full.preconisationCapteurPression) preconisations.push("Capteur de pression différentielle");
+  if (full.preconisationEgr) preconisations.push("Vanne EGR");
+  if (full.preconisationRegenerationAutoroute) preconisations.push("Régénération sur autoroute");
+  if (full.preconisationControlInjecteurs) preconisations.push("Contrôle injecteurs");
+  if (full.preconisationControlTurbo) preconisations.push("Contrôle turbo");
+  if (full.preconisationControlConsommationHuile) preconisations.push("Contrôle consommation d'huile");
+
+  const html = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<title>Rapport FAP — ${full.numeroDossier}</title>
+<style>
+  body { font-family: Arial, sans-serif; color: #1e293b; margin: 0; padding: 40px; max-width: 800px; margin: 0 auto; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; border-bottom: 3px solid #1e3a5f; padding-bottom: 20px; }
+  .logo { font-size: 28px; font-weight: 900; color: #1e3a5f; }
+  .logo span { color: #3b82f6; }
+  .ref { text-align: right; font-size: 13px; color: #64748b; }
+  .ref strong { font-size: 18px; color: #1e293b; display: block; }
+  h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #1e3a5f; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; margin-top: 28px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; margin-top: 12px; }
+  .field label { font-size: 11px; color: #64748b; text-transform: uppercase; }
+  .field p { margin: 2px 0 0; font-size: 14px; font-weight: 600; }
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 12px; }
+  .metric { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; text-align: center; }
+  .metric .val { font-size: 22px; font-weight: 800; color: #1e3a5f; }
+  .metric .lbl { font-size: 11px; color: #64748b; margin-top: 4px; }
+  .badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 13px; font-weight: 700; }
+  .badge-green { background: #dcfce7; color: #166534; }
+  .badge-orange { background: #fed7aa; color: #9a3412; }
+  .badge-red { background: #fee2e2; color: #991b1b; }
+  .preco li { font-size: 13px; margin: 4px 0; }
+  .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 11px; color: #94a3b8; text-align: center; }
+  @media print { body { padding: 20px; } }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">FAP<span>Expert</span><div style="font-size:12px;font-weight:400;color:#64748b;margin-top:4px;">Rapport de nettoyage de filtre à particules</div></div>
+  <div class="ref"><strong>${full.numeroDossier}</strong>Édité le ${d}</div>
+</div>
+
+<h2>Informations Client & Véhicule</h2>
+<div class="grid">
+  <div class="field"><label>Client</label><p>${full.client?.nomClient || "-"}</p></div>
+  <div class="field"><label>Téléphone</label><p>${full.client?.telephone || "-"}</p></div>
+  <div class="field"><label>Immatriculation</label><p>${full.vehicule?.immatriculation || "-"}</p></div>
+  <div class="field"><label>Marque & Modèle</label><p>${full.vehicule?.marque || "-"} ${full.vehicule?.modele || ""}</p></div>
+  <div class="field"><label>VIN</label><p>${full.vehicule?.vin || "-"}</p></div>
+  <div class="field"><label>Motorisation</label><p>${full.vehicule?.motorisation || "-"}</p></div>
+  <div class="field"><label>Kilométrage</label><p>${full.vehicule?.kilometrage ? full.vehicule.kilometrage + " km" : "-"}</p></div>
+  <div class="field"><label>Statut final</label><p><span class="badge badge-${full.statut === "CLOTURE" ? "green" : "orange"}">${STATUT_LABELS[full.statut] || full.statut}</span></p></div>
+</div>
+
+<h2>Contrôle Initial</h2>
+<div class="grid">
+  <div class="field"><label>Poids à l'entrée</label><p>${full.poidsEntreeG ? full.poidsEntreeG + " g" : "-"}</p></div>
+  <div class="field"><label>Pression à l'entrée</label><p>${full.pressionEntreeMbar ? full.pressionEntreeMbar + " mbar" : "-"}</p></div>
+  <div class="field"><label>Diagnostic accessoires</label><p>${DIAG_LABELS[full.diagnosticAccessoires || ""] || full.diagnosticAccessoires || "-"}</p></div>
+  <div class="field"><label>Diagnostic céramique</label><p>${DIAG_LABELS[full.diagnosticCeramique || ""] || full.diagnosticCeramique || "-"}</p></div>
+</div>
+
+<h2>Résultats de Nettoyage</h2>
+<div class="metrics">
+  <div class="metric"><div class="val">${full.poidsEntreeG ? full.poidsEntreeG + " g" : "-"}</div><div class="lbl">Poids entrée</div></div>
+  <div class="metric"><div class="val">${full.poidsSortieG ? full.poidsSortieG + " g" : "-"}</div><div class="lbl">Poids sortie</div></div>
+  <div class="metric"><div class="val">${masseExtraite}</div><div class="lbl">Masse extraite</div></div>
+  <div class="metric"><div class="val">${efficacite}</div><div class="lbl">Efficacité</div></div>
+</div>
+<div class="grid" style="margin-top:16px;">
+  <div class="field"><label>Pression à la sortie</label><p>${full.pressionSortieMbar ? full.pressionSortieMbar + " mbar" : "-"}</p></div>
+  <div class="field"><label>Résultat final</label><p><span class="badge ${full.resultatFinal === "NETTOYE" ? "badge-green" : full.resultatFinal === "PARTIELLEMENT_NETTOYE" ? "badge-orange" : "badge-red"}">${RESULTAT_LABELS[full.resultatFinal || ""] || full.resultatFinal || "Non renseigné"}</span></p></div>
+</div>
+${full.observationAtelier ? `<div style="margin-top:12px;padding:12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;font-size:13px;"><strong>Observations atelier :</strong> ${full.observationAtelier}</div>` : ""}
+
+${preconisations.length > 0 ? `<h2>Préconisations</h2><ul class="preco">${preconisations.map(p => `<li>✓ ${p}</li>`).join("")}</ul>` : ""}
+
+<div class="footer">FAP Expert — Rapport généré le ${d} — ${full.numeroDossier}<br/>Ce document est un rapport technique de nettoyage de filtre à particules.</div>
+<script>window.onload = () => window.print();</script>
+</body></html>`;
+
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("Content-Disposition", `inline; filename="rapport-${full.numeroDossier}.html"`);
+  res.send(html);
 });
 
 export default router;
