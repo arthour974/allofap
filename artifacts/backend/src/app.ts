@@ -11,10 +11,15 @@ const app: Express = express();
 
 app.set("trust proxy", 1);
 
-// CloudFront → ALB uses HTTP internally. CloudFront forwards X-Forwarded-Proto
-// set to the viewer protocol (https); ALB appends its own (http), making the
-// header "https, http". With trust proxy: 1 Express reads the first value
-// (https) so req.secure = true and express-session sets the Secure cookie.
+// CloudFront → ALB uses HTTP internally so X-Forwarded-Proto arrives as "http".
+// CloudFront enforces viewer HTTPS (redirect-to-https), so we can safely
+// override the protocol here to allow express-session to set the Secure cookie.
+if (process.env.NODE_ENV === "production") {
+  app.use((req, _res, next) => {
+    req.headers["x-forwarded-proto"] = "https";
+    next();
+  });
+}
 
 app.use(
   pinoHttp({
