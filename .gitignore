@@ -52,3 +52,18 @@ Thumbs.db
 # Local tooling caches
 .cache/
 .local/
+
+# Claude Code & AI agent tooling (local config, skills, permissions)
+.claude/
+.agents/
+
+# pnpm store cache
+.pnpm-store/
+
+# Terraform — state and real tfvars (examples OK)
+*.tfvars
+!*.tfvars.example
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
