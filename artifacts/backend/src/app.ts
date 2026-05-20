@@ -11,6 +11,15 @@ const app: Express = express();
 
 app.set("trust proxy", 1);
 
+// CloudFront → ALB uses HTTP internally; restore the real viewer protocol
+// so express-session sets the Secure cookie flag correctly.
+app.use((req, _res, next) => {
+  if (req.headers["cloudfront-forwarded-proto"] === "https") {
+    req.headers["x-forwarded-proto"] = "https";
+  }
+  next();
+});
+
 app.use(
   pinoHttp({
     logger,
