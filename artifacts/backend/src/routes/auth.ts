@@ -29,8 +29,8 @@ router.post("/auth/login", async (req, res) => {
     return;
   }
 
-  (req.session as Record<string, unknown>).userId = user[0].id;
-  (req.session as Record<string, unknown>).userRole = user[0].role;
+  (req.session as unknown as Record<string, unknown>).userId = user[0].id;
+  (req.session as unknown as Record<string, unknown>).userRole = user[0].role;
 
   res.json({
     user: { id: user[0].id, identifiant: user[0].identifiant, nom: user[0].nom, role: user[0].role },
@@ -45,7 +45,7 @@ router.post("/auth/logout", (req, res) => {
 });
 
 router.get("/auth/me", async (req, res) => {
-  const userId = (req.session as Record<string, unknown>).userId as number | undefined;
+  const userId = (req.session as unknown as Record<string, unknown>).userId as number | undefined;
   if (!userId) {
     res.status(401).json({ error: "UNAUTHORIZED", message: "Non authentifié" });
     return;

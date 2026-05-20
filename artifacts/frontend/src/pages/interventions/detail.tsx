@@ -11,6 +11,8 @@ import {
   getGetHistoriqueInterventionQueryKey,
   useAjouterMedia,
   useSupprimerMedia,
+  useUpdateClient,
+  useUpdateVehicule,
   StatutIntervention,
   DiagnosticAccessoires,
   DiagnosticCeramique,
@@ -24,7 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { STATUT_LABELS, STATUT_COLORS, WORKFLOW_ORDER } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
-import { AlertCircle, CheckCircle, ChevronRight, FileText, Download, Save, AlertTriangle, Upload, Trash2, Image, Video, MapPin } from "lucide-react";
+import { AlertCircle, CheckCircle, ChevronRight, FileText, Download, Save, AlertTriangle, Upload, Trash2, Image, Video, MapPin, Pencil, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -41,13 +43,27 @@ export default function DetailIntervention() {
   const queryClient = useQueryClient();
 
   const [validationError, setValidationError] = useState<{ error: string, champsManquants: string[] } | null>(null);
+  const [editingClient, setEditingClient] = useState(false);
+  const [editingVehicule, setEditingVehicule] = useState(false);
+  const [clientForm, setClientForm] = useState({
+    nomClient: "",
+    telephone: "",
+    email: "",
+    adresse: "",
+  });
+  const [vehiculeForm, setVehiculeForm] = useState({
+    immatriculation: "",
+    marque: "",
+    modele: "",
+    vin: "",
+    motorisation: "",
+    kilometrage: "" as string | number,
+  });
 
   // Queries
   const { data: intervention, isLoading } = useGetIntervention(id, {
     query: { queryKey: getGetInterventionQueryKey(id), enabled: !!id }
   });
-  console.log(intervention);
-
   const { data: historique } = useGetHistoriqueIntervention(id, {
     query: { queryKey: getGetHistoriqueInterventionQueryKey(id), enabled: !!id }
   });
@@ -98,6 +114,40 @@ export default function DetailIntervention() {
         toast({ title: "Erreur", description: "Impossible d'ajouter le média.", variant: "destructive" });
       }
     }
+  });
+
+  const updateClientMutation = useUpdateClient({
+    mutation: {
+      onSuccess: () => {
+        setEditingClient(false);
+        toast({ title: "Client mis à jour", description: "Les informations client ont été enregistrées." });
+        queryClient.invalidateQueries({ queryKey: getGetInterventionQueryKey(id) });
+      },
+      onError: (error: { data?: { message?: string }; message?: string }) => {
+        toast({
+          title: "Erreur",
+          description: error.data?.message || error.message || "Impossible d'enregistrer le client.",
+          variant: "destructive",
+        });
+      },
+    },
+  });
+
+  const updateVehiculeMutation = useUpdateVehicule({
+    mutation: {
+      onSuccess: () => {
+        setEditingVehicule(false);
+        toast({ title: "Véhicule mis à jour", description: "Les informations véhicule ont été enregistrées." });
+        queryClient.invalidateQueries({ queryKey: getGetInterventionQueryKey(id) });
+      },
+      onError: (error: { data?: { message?: string }; message?: string }) => {
+        toast({
+          title: "Erreur",
+          description: error.data?.message || error.message || "Impossible d'enregistrer le véhicule.",
+          variant: "destructive",
+        });
+      },
+    },
   });
 
   const supprimerMediaMutation = useSupprimerMedia({
@@ -194,6 +244,81 @@ export default function DetailIntervention() {
       if (formData[f] !== "") dataToSave[f] = formData[f];
     });
     updateMutation.mutate({ id, data: dataToSave });
+  };
+
+  const startEditClient = () => {
+    if (!intervention?.client) return;
+    setClientForm({
+      nomClient: intervention.client.nomClient,
+      telephone: intervention.client.telephone,
+      email: intervention.client.email ?? "",
+      adresse: intervention.client.adresse ?? "",
+    });
+    setEditingClient(true);
+  };
+
+  const cancelEditClient = () => setEditingClient(false);
+
+  const saveClient = () => {
+    if (!intervention?.client?.id) return;
+    if (!clientForm.nomClient.trim() || !clientForm.telephone.trim()) {
+      toast({
+        title: "Champs requis",
+        description: "Le nom et le téléphone sont obligatoires.",
+        variant: "destructive",
+      });
+      return;
+    }
+    updateClientMutation.mutate({
+      id: intervention.client.id,
+      data: {
+        nomClient: clientForm.nomClient.trim(),
+        telephone: clientForm.telephone.trim(),
+        email: clientForm.email.trim() || null,
+        adresse: clientForm.adresse.trim() || null,
+      },
+    });
+  };
+
+  const startEditVehicule = () => {
+    if (!intervention?.vehicule) return;
+    setVehiculeForm({
+      immatriculation: intervention.vehicule.immatriculation,
+      marque: intervention.vehicule.marque,
+      modele: intervention.vehicule.modele,
+      vin: intervention.vehicule.vin ?? "",
+      motorisation: intervention.vehicule.motorisation ?? "",
+      kilometrage: intervention.vehicule.kilometrage ?? "",
+    });
+    setEditingVehicule(true);
+  };
+
+  const cancelEditVehicule = () => setEditingVehicule(false);
+
+  const saveVehicule = () => {
+    if (!intervention?.vehicule?.id) return;
+    if (!vehiculeForm.immatriculation.trim() || !vehiculeForm.marque.trim() || !vehiculeForm.modele.trim()) {
+      toast({
+        title: "Champs requis",
+        description: "L'immatriculation, la marque et le modèle sont obligatoires.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const km = vehiculeForm.kilometrage === "" || vehiculeForm.kilometrage === null
+      ? null
+      : Number(vehiculeForm.kilometrage);
+    updateVehiculeMutation.mutate({
+      id: intervention.vehicule.id,
+      data: {
+        immatriculation: vehiculeForm.immatriculation.trim(),
+        marque: vehiculeForm.marque.trim(),
+        modele: vehiculeForm.modele.trim(),
+        vin: vehiculeForm.vin.trim() || null,
+        motorisation: vehiculeForm.motorisation.trim() || null,
+        kilometrage: km != null && !Number.isNaN(km) ? km : null,
+      },
+    });
   };
 
   const currentStatutIndex = intervention ? WORKFLOW_ORDER.indexOf(intervention.statut) : -1;
@@ -628,66 +753,186 @@ export default function DetailIntervention() {
           <TabsContent value="client" className="space-y-6">
             <Card>
               <CardHeader className="bg-slate-50 border-b">
-                <CardTitle>Informations Client</CardTitle>
+                <div className="flex items-center justify-between gap-4">
+                  <CardTitle>Informations Client</CardTitle>
+                  {intervention.client && (
+                    editingClient ? (
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={cancelEditClient} disabled={updateClientMutation.isPending}>
+                          <X className="w-4 h-4 mr-1" /> Annuler
+                        </Button>
+                        <Button size="sm" onClick={saveClient} disabled={updateClientMutation.isPending}>
+                          <Save className="w-4 h-4 mr-1" />
+                          {updateClientMutation.isPending ? "Enregistrement..." : "Enregistrer"}
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button variant="outline" size="sm" onClick={startEditClient}>
+                        <Pencil className="w-4 h-4 mr-1" /> Modifier
+                      </Button>
+                    )
+                  )}
+                </div>
               </CardHeader>
               <CardContent className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Label className="text-slate-500">Nom / Raison sociale</Label>
-                    <p className="text-lg font-medium">{intervention.client.nomClient}</p>
+                {!intervention.client ? (
+                  <p className="text-slate-500">Aucun client associé à ce dossier.</p>
+                ) : editingClient ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label>Nom / Raison sociale</Label>
+                      <Input value={clientForm.nomClient} onChange={e => setClientForm(f => ({ ...f, nomClient: e.target.value }))} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Téléphone</Label>
+                      <Input value={clientForm.telephone} onChange={e => setClientForm(f => ({ ...f, telephone: e.target.value }))} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Email</Label>
+                      <Input type="email" value={clientForm.email} onChange={e => setClientForm(f => ({ ...f, email: e.target.value }))} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Adresse</Label>
+                      <Input value={clientForm.adresse} onChange={e => setClientForm(f => ({ ...f, adresse: e.target.value }))} />
+                    </div>
                   </div>
-                  <div>
-                    <Label className="text-slate-500">Téléphone</Label>
-                    <p className="text-lg font-medium">{intervention.client.telephone}</p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <Label className="text-slate-500">Nom / Raison sociale</Label>
+                      <p className="text-lg font-medium">{intervention.client.nomClient}</p>
+                    </div>
+                    <div>
+                      <Label className="text-slate-500">Téléphone</Label>
+                      <p className="text-lg font-medium">{intervention.client.telephone}</p>
+                    </div>
+                    <div>
+                      <Label className="text-slate-500">Email</Label>
+                      <p className="text-lg font-medium">{intervention.client.email || "-"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-slate-500">Adresse</Label>
+                      <p className="text-lg font-medium">{intervention.client.adresse || "-"}</p>
+                    </div>
                   </div>
-                  <div>
-                    <Label className="text-slate-500">Email</Label>
-                    <p className="text-lg font-medium">{intervention.client.email || "-"}</p>
-                  </div>
-                  <div>
-                    <Label className="text-slate-500">Adresse</Label>
-                    <p className="text-lg font-medium">{intervention.client.adresse || "-"}</p>
-                  </div>
-                </div>
+                )}
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="bg-slate-50 border-b">
-                <CardTitle>
-                  Informations Véhicule
-                </CardTitle>
-
-                <Button variant="outline" size="sm" className="mt-2 gap-2" onClick={() => {
-                  window.open(`https://www.google.com/maps/search/?api=1&query=${intervention.client.adresse}`, "_blank");
-                }}>
-                  <MapPin className="w-4 h-4" />
-                  Ouvrir dans Google Maps
-                </Button>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <CardTitle>Informations Véhicule</CardTitle>
+                    {!editingVehicule && intervention.client?.adresse && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-2 gap-2"
+                        onClick={() => {
+                          window.open(
+                            `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(intervention.client!.adresse!)}`,
+                            "_blank",
+                          );
+                        }}
+                      >
+                        <MapPin className="w-4 h-4" />
+                        Ouvrir dans Google Maps
+                      </Button>
+                    )}
+                  </div>
+                  {intervention.vehicule && (
+                    editingVehicule ? (
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={cancelEditVehicule} disabled={updateVehiculeMutation.isPending}>
+                          <X className="w-4 h-4 mr-1" /> Annuler
+                        </Button>
+                        <Button size="sm" onClick={saveVehicule} disabled={updateVehiculeMutation.isPending}>
+                          <Save className="w-4 h-4 mr-1" />
+                          {updateVehiculeMutation.isPending ? "Enregistrement..." : "Enregistrer"}
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button variant="outline" size="sm" onClick={startEditVehicule}>
+                        <Pencil className="w-4 h-4 mr-1" /> Modifier
+                      </Button>
+                    )
+                  )}
+                </div>
               </CardHeader>
               <CardContent className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Label className="text-slate-500">Immatriculation</Label>
-                    <p className="text-xl font-bold uppercase">{intervention.vehicule.immatriculation}</p>
+                {!intervention.vehicule ? (
+                  <p className="text-slate-500">Aucun véhicule associé à ce dossier.</p>
+                ) : editingVehicule ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label>Immatriculation</Label>
+                      <Input
+                        className="uppercase"
+                        value={vehiculeForm.immatriculation}
+                        onChange={e => setVehiculeForm(f => ({ ...f, immatriculation: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Marque</Label>
+                      <Input value={vehiculeForm.marque} onChange={e => setVehiculeForm(f => ({ ...f, marque: e.target.value }))} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Modèle</Label>
+                      <Input value={vehiculeForm.modele} onChange={e => setVehiculeForm(f => ({ ...f, modele: e.target.value }))} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>VIN (Numéro de châssis)</Label>
+                      <Input
+                        className="uppercase"
+                        value={vehiculeForm.vin}
+                        onChange={e => setVehiculeForm(f => ({ ...f, vin: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Motorisation</Label>
+                      <Input value={vehiculeForm.motorisation} onChange={e => setVehiculeForm(f => ({ ...f, motorisation: e.target.value }))} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Kilométrage (km)</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        value={vehiculeForm.kilometrage}
+                        onChange={e => setVehiculeForm(f => ({ ...f, kilometrage: e.target.value }))}
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <Label className="text-slate-500">Marque & Modèle</Label>
-                    <p className="text-lg font-medium">{intervention.vehicule.marque} {intervention.vehicule.modele}</p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <Label className="text-slate-500">Immatriculation</Label>
+                      <p className="text-xl font-bold uppercase">{intervention.vehicule.immatriculation}</p>
+                    </div>
+                    <div>
+                      <Label className="text-slate-500">Marque</Label>
+                      <p className="text-lg font-medium">{intervention.vehicule.marque}</p>
+                    </div>
+                    <div>
+                      <Label className="text-slate-500">Modèle</Label>
+                      <p className="text-lg font-medium">{intervention.vehicule.modele}</p>
+                    </div>
+                    <div>
+                      <Label className="text-slate-500">VIN (Numéro de châssis)</Label>
+                      <p className="text-lg font-medium uppercase">{intervention.vehicule.vin || "-"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-slate-500">Motorisation</Label>
+                      <p className="text-lg font-medium">{intervention.vehicule.motorisation || "-"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-slate-500">Kilométrage</Label>
+                      <p className="text-lg font-medium">
+                        {intervention.vehicule.kilometrage ? `${intervention.vehicule.kilometrage} km` : "-"}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <Label className="text-slate-500">VIN (Numéro de châssis)</Label>
-                    <p className="text-lg font-medium uppercase">{intervention.vehicule.vin || "-"}</p>
-                  </div>
-                  <div>
-                    <Label className="text-slate-500">Motorisation</Label>
-                    <p className="text-lg font-medium">{intervention.vehicule.motorisation || "-"}</p>
-                  </div>
-                  <div>
-                    <Label className="text-slate-500">Kilométrage</Label>
-                    <p className="text-lg font-medium">{intervention.vehicule.kilometrage ? `${intervention.vehicule.kilometrage} km` : "-"}</p>
-                  </div>
-                </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

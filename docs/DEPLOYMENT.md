@@ -28,6 +28,8 @@ Environnements :
 
 ### 2. Bootstrap Terraform (une fois par compte AWS)
 
+Prérequis : `aws sts get-caller-identity` doit fonctionner (`aws configure` avec un utilisateur IAM).
+
 ```bash
 cd infra/bootstrap
 terraform init
@@ -35,6 +37,8 @@ terraform apply -var="aws_region=us-west-2"
 ```
 
 Notez les outputs `state_bucket` et `lock_table`.
+
+**Compte allofap (déjà provisionné)** : bucket `allofap-terraform-state-503789396714`, lock `allofap-terraform-locks`. Voir aussi `docs/DEPLOYMENT-STATUS.md`.
 
 ### 3. Configurer dev puis prod
 
@@ -77,20 +81,24 @@ aws ssm put-parameter --name "/allofap/dev/DATABASE_URL" \
   --type SecureString --value "postgresql://..." --overwrite
 ```
 
-### 5. GitHub — environnements & secrets
+### 5. GitHub — environnements & secrets (DEV et PROD séparés)
 
-**Settings → Environments** : créer `development` et `production`.
+Guide détaillé : **`docs/GITHUB-ENVIRONMENTS.md`**
 
-Pour chaque environnement, ajouter :
+**Settings → Environments** : créer **`development`** et **`production`** (noms exacts).
 
-| Secret / Variable | Description |
-|-------------------|-------------|
-| `AWS_ROLE_ARN` | Secret — output Terraform `github_actions_role_arn` |
-| `AWS_REGION` | Variable — ex. `us-west-2` |
-| `TF_STATE_BUCKET` | Variable — bucket bootstrap (ex. `allofap-terraform-state-123456789012`) |
-| `TF_LOCK_TABLE` | Variable — table DynamoDB bootstrap |
+Chaque environnement a ses **propres** valeurs (même noms de clés, contenus différents) :
 
-Protection **production** : cocher « Required reviewers » si vous voulez une approbation manuelle.
+| Secret / Variable | DEV (`development`) | PROD (`production`) |
+|-------------------|---------------------|---------------------|
+| Secret `AWS_ROLE_ARN` | rôle `allofap-**dev**-github-actions` | rôle `allofap-**prod**-github-actions` |
+| Variable `AWS_REGION` | `us-west-2` | `us-west-2` |
+| Variable `TF_STATE_BUCKET` | bucket state | idem |
+| Variable `TF_LOCK_TABLE` | table lock | idem |
+
+Workflows : **`deploy-dev.yml`** (branche `develop`) et **`deploy-prod.yml`** (branche `main`).
+
+Protection **production** : cocher « Required reviewers ».
 
 ### 6. Branches Git
 
@@ -129,8 +137,10 @@ Puis `terraform apply -var="api_image_tag=latest"` ou relancer la CI.
 
 | Fichier | Rôle |
 |---------|------|
-| `.github/workflows/ci.yml` | PR / push : typecheck, build, `terraform validate` |
-| `.github/workflows/deploy.yml` | Build API + front, `terraform apply`, S3 sync, invalidation CF |
+| `.github/workflows/ci.yml` | PR / push : typecheck, build, validate Terraform dev + prod |
+| `.github/workflows/deploy-dev.yml` | Déploiement **DEV** (`develop` → environnement `development`) |
+| `.github/workflows/deploy-prod.yml` | Déploiement **PROD** (`main` → environnement `production`) |
+| `.github/workflows/deploy-aws.yml` | Workflow réutilisable (interne) |
 
 Déploiement manuel : **Actions → Deploy → Run workflow** → choisir `dev` ou `prod`.
 
