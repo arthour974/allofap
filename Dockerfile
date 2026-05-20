@@ -11,7 +11,7 @@ COPY artifacts/backend ./artifacts/backend
 
 RUN pnpm install --frozen-lockfile
 RUN pnpm --filter @workspace/backend run build
-RUN pnpm prune --prod
+RUN pnpm prune --prod --config.confirmModulesPurge=false
 
 FROM node:22-alpine AS runner
 
