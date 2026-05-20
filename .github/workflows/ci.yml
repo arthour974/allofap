@@ -37,13 +37,18 @@ jobs:
       - name: Build backend
         run: pnpm --filter @workspace/backend run build
 
-      - name: Terraform validate (dev)
-        uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.9.8
 
-      - name: Terraform init & validate
+      - name: Terraform validate (dev)
         working-directory: infra/environments/dev
+        run: |
+          terraform init -backend=false
+          terraform validate
+
+      - name: Terraform validate (prod)
+        working-directory: infra/environments/prod
         run: |
           terraform init -backend=false
           terraform validate

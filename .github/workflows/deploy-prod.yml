@@ -1,0 +1,24 @@
+# Déploiement PROD uniquement — branche main
+# Secrets/variables : environnement GitHub "production"
+# Recommandé : activer "Required reviewers" sur l'environnement production
+
+name: Deploy PROD
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/deploy-aws.yml
+    with:
+      env_name: prod
+      github_environment: production
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
