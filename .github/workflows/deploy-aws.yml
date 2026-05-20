@@ -1,61 +1,39 @@
-name: Deploy
+# Workflow réutilisable — ne pas lancer directement.
+# Utiliser deploy-dev.yml ou deploy-prod.yml
+
+name: Deploy AWS (reusable)
 
 on:
-  push:
-    branches:
-      - develop
-      - main
-  workflow_dispatch:
+  workflow_call:
     inputs:
-      environment:
-        description: Environment to deploy
+      env_name:
+        description: "dev ou prod (dossier Terraform + clé state S3)"
         required: true
-        type: choice
-        options:
-          - dev
-          - prod
+        type: string
+      github_environment:
+        description: "Nom de l'environnement GitHub (development | production)"
+        required: true
+        type: string
+    secrets:
+      AWS_ROLE_ARN:
+        required: true
 
 permissions:
   id-token: write
   contents: read
 
 concurrency:
-  group: deploy-${{ github.event.inputs.environment || (github.ref == 'refs/heads/main' && 'prod' || 'dev') }}
+  group: deploy-${{ inputs.env_name }}
   cancel-in-progress: false
 
 jobs:
-  resolve-env:
-    runs-on: ubuntu-latest
-    outputs:
-      environment: ${{ steps.env.outputs.environment }}
-      tf_dir: ${{ steps.env.outputs.tf_dir }}
-      github_environment: ${{ steps.env.outputs.github_environment }}
-    steps:
-      - id: env
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            ENV="${{ github.event.inputs.environment }}"
-          elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            ENV="prod"
-          else
-            ENV="dev"
-          fi
-          echo "environment=$ENV" >> "$GITHUB_OUTPUT"
-          echo "tf_dir=infra/environments/$ENV" >> "$GITHUB_OUTPUT"
-          if [ "$ENV" = "prod" ]; then
-            echo "github_environment=production" >> "$GITHUB_OUTPUT"
-          else
-            echo "github_environment=development" >> "$GITHUB_OUTPUT"
-          fi
-
   deploy:
-    needs: resolve-env
     runs-on: ubuntu-latest
-    environment: ${{ needs.resolve-env.outputs.github_environment }}
+    environment: ${{ inputs.github_environment }}
     env:
       AWS_REGION: ${{ vars.AWS_REGION || 'us-west-2' }}
-      TF_DIR: ${{ needs.resolve-env.outputs.tf_dir }}
-      ENV_NAME: ${{ needs.resolve-env.outputs.environment }}
+      TF_DIR: infra/environments/${{ inputs.env_name }}
+      ENV_NAME: ${{ inputs.env_name }}
 
     steps:
       - uses: actions/checkout@v4
@@ -115,11 +93,8 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build and push API image
-        env:
-          ECR_REGISTRY: ${{ steps.ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
         run: |
-          IMAGE="${{ steps.tf.outputs.ecr }}:${IMAGE_TAG}"
+          IMAGE="${{ steps.tf.outputs.ecr }}:${{ github.sha }}"
           docker build -t "$IMAGE" -t "${{ steps.tf.outputs.ecr }}:latest" .
           docker push "$IMAGE"
           docker push "${{ steps.tf.outputs.ecr }}:latest"
@@ -154,5 +129,6 @@ jobs:
 
       - name: Deployment summary
         run: |
-          echo "## Déployé (${{ env.ENV_NAME }})" >> "$GITHUB_STEP_SUMMARY"
-          echo "URL: ${{ steps.tf.outputs.website }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "## Déployé : ${{ inputs.env_name }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Environnement GitHub : **${{ inputs.github_environment }}**" >> "$GITHUB_STEP_SUMMARY"
+          echo "URL : ${{ steps.tf.outputs.website }}" >> "$GITHUB_STEP_SUMMARY"

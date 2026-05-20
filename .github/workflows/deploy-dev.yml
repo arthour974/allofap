@@ -1,0 +1,23 @@
+# Déploiement DEV uniquement — branche develop
+# Secrets/variables : environnement GitHub "development"
+
+name: Deploy DEV
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/deploy-aws.yml
+    with:
+      env_name: dev
+      github_environment: development
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
