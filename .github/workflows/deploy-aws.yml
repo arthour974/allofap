@@ -75,7 +75,9 @@ jobs:
         run: |
           terraform apply -auto-approve -input=false \
             -var="api_image_tag=${{ github.sha }}" \
-            -var="github_repository=${{ github.repository }}"
+            -var="github_repository=${{ github.repository }}" \
+            -var="terraform_state_bucket=${{ vars.TF_STATE_BUCKET }}" \
+            -var="terraform_lock_table=${{ vars.TF_LOCK_TABLE }}"
 
       - name: Read Terraform outputs
         id: tf
