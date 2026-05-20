@@ -1,4 +1,4 @@
 aws_region             = "us-west-2"
-github_repository      = "VOTRE_ORG/allofap"
-terraform_state_bucket = "allofap-terraform-state-123456789012"
+github_repository      = "arthour974/allofap"
+terraform_state_bucket = "allofap-terraform-state-503789396714"
 terraform_lock_table   = "allofap-terraform-locks"
