@@ -32,6 +32,7 @@ jobs:
     environment: ${{ inputs.github_environment }}
     env:
       AWS_REGION: ${{ vars.AWS_REGION || 'eu-west-3' }}
+      TF_BACKEND_REGION: ${{ vars.TF_BACKEND_REGION || 'us-west-2' }}
       TF_DIR: infra/environments/${{ inputs.env_name }}
       ENV_NAME: ${{ inputs.env_name }}
 
@@ -66,7 +67,7 @@ jobs:
           terraform init -input=false \
             -backend-config="bucket=${TF_STATE_BUCKET}" \
             -backend-config="key=${ENV_NAME}/terraform.tfstate" \
-            -backend-config="region=${AWS_REGION}" \
+            -backend-config="region=${TF_BACKEND_REGION}" \
             -backend-config="dynamodb_table=${TF_LOCK_TABLE}" \
             -backend-config="encrypt=true"
 
@@ -97,7 +98,7 @@ jobs:
       - name: Build and push API image
         run: |
           IMAGE="${{ steps.tf.outputs.ecr }}:${{ github.sha }}"
-          docker build -t "$IMAGE" -t "${{ steps.tf.outputs.ecr }}:latest" .
+          docker build --platform linux/amd64 -t "$IMAGE" -t "${{ steps.tf.outputs.ecr }}:latest" .
           docker push "$IMAGE"
           docker push "${{ steps.tf.outputs.ecr }}:latest"
 

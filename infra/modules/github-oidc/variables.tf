@@ -37,3 +37,9 @@ variable "terraform_lock_table" {
   type        = string
   description = "Table DynamoDB des verrous Terraform (terraform apply en CI)."
 }
+
+variable "terraform_lock_region" {
+  type        = string
+  default     = "us-west-2"
+  description = "Région de la table DynamoDB de lock (souvent celle du bootstrap, distincte de aws_region)."
+}
