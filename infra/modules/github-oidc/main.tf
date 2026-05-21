@@ -68,7 +68,7 @@ data "aws_iam_policy_document" "deploy" {
       "dynamodb:PutItem",
       "dynamodb:DeleteItem",
     ]
-    resources = ["arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/${var.terraform_lock_table}"]
+    resources = ["arn:aws:dynamodb:${var.terraform_lock_region}:${data.aws_caller_identity.current.account_id}:table/${var.terraform_lock_table}"]
   }
 
   statement {

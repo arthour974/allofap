@@ -12,7 +12,8 @@ Deux environnements **isolés** : ressources AWS distinctes, state Terraform dis
 | Terraform | `infra/environments/dev` | `infra/environments/prod` |
 | State S3 | `dev/terraform.tfstate` | `prod/terraform.tfstate` |
 | ECR | `allofap-dev-api` | `allofap-prod-api` |
-| S3 front | `allofap-dev-frontend` | `allofap-prod-frontend` |
+| S3 front | `allofap-dev-frontend-euw3` | `allofap-prod-frontend-euw3` *(après migration Paris)* |
+| S3 médias | `allofap-dev-medias-euw3` | `allofap-prod-medias-euw3` |
 | SSM secrets | `/allofap/dev/*` | `/allofap/prod/*` |
 | Neon | branche **dev** | branche **main** / prod |
 | Rôle OIDC CI | `allofap-dev-github-actions` | `allofap-prod-github-actions` |
@@ -32,8 +33,11 @@ Repo : **https://github.com/arthour974/allofap**
 |------|-----|--------|
 | Secret | `AWS_ROLE_ARN` | `arn:aws:iam::503789396714:role/allofap-dev-github-actions` |
 | Variable | `AWS_REGION` | `eu-west-3` |
+| Variable | `TF_BACKEND_REGION` | `us-west-2` |
 | Variable | `TF_STATE_BUCKET` | `allofap-terraform-state-503789396714` |
 | Variable | `TF_LOCK_TABLE` | `allofap-terraform-locks` |
+
+> **`TF_BACKEND_REGION`** : région du bucket S3 de state et de la table DynamoDB (bootstrap Oregon). **`AWS_REGION`** : région des ressources applicatives (Paris).
 
 Déploiement : push sur **`develop`** ou Actions → **Deploy DEV**.
 
@@ -43,6 +47,7 @@ Déploiement : push sur **`develop`** ou Actions → **Deploy DEV**.
 |------|-----|--------|
 | Secret | `AWS_ROLE_ARN` | `arn:aws:iam::503789396714:role/allofap-prod-github-actions` *(après `terraform apply` prod)* |
 | Variable | `AWS_REGION` | `eu-west-3` |
+| Variable | `TF_BACKEND_REGION` | `us-west-2` |
 | Variable | `TF_STATE_BUCKET` | `allofap-terraform-state-503789396714` |
 | Variable | `TF_LOCK_TABLE` | `allofap-terraform-locks` |
 
