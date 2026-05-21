@@ -13,6 +13,8 @@ import {
   useSupprimerMedia,
   useUpdateClient,
   useUpdateVehicule,
+  useDeleteIntervention,
+  getListInterventionsQueryKey,
   StatutIntervention,
   DiagnosticAccessoires,
   DiagnosticCeramique,
@@ -34,6 +36,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ConfirmDeleteInterventionsDialog } from "@/components/interventions/ConfirmDeleteInterventionsDialog";
 
 export default function DetailIntervention() {
   const params = useParams();
@@ -43,6 +46,7 @@ export default function DetailIntervention() {
   const queryClient = useQueryClient();
 
   const [validationError, setValidationError] = useState<{ error: string, champsManquants: string[] } | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState(false);
   const [editingVehicule, setEditingVehicule] = useState(false);
   const [clientForm, setClientForm] = useState({
@@ -144,6 +148,27 @@ export default function DetailIntervention() {
         toast({
           title: "Erreur",
           description: error.data?.message || error.message || "Impossible d'enregistrer le véhicule.",
+          variant: "destructive",
+        });
+      },
+    },
+  });
+
+  const deleteInterventionMutation = useDeleteIntervention({
+    mutation: {
+      onSuccess: () => {
+        setDeleteDialogOpen(false);
+        toast({
+          title: "Intervention supprimée",
+          description: "Le dossier a été supprimé. Le client et le véhicule sont conservés.",
+        });
+        queryClient.invalidateQueries({ queryKey: getListInterventionsQueryKey() });
+        setLocation("/interventions");
+      },
+      onError: () => {
+        toast({
+          title: "Erreur",
+          description: "Impossible de supprimer cette intervention.",
           variant: "destructive",
         });
       },
@@ -364,18 +389,38 @@ export default function DetailIntervention() {
             </p>
           </div>
 
-          {!isTermine && (
-            <Button 
-              size="lg" 
-              className="h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-md"
-              onClick={() => avancerMutation.mutate({ id })}
-              disabled={avancerMutation.isPending}
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-12 border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"
+              onClick={() => setDeleteDialogOpen(true)}
+              disabled={deleteInterventionMutation.isPending}
             >
-              Étape suivante
-              <ChevronRight className="w-5 h-5 ml-2" />
+              <Trash2 className="w-5 h-5 mr-2" />
+              Supprimer
             </Button>
-          )}
+            {!isTermine && (
+              <Button
+                size="lg"
+                className="h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-md"
+                onClick={() => avancerMutation.mutate({ id })}
+                disabled={avancerMutation.isPending}
+              >
+                Étape suivante
+                <ChevronRight className="w-5 h-5 ml-2" />
+              </Button>
+            )}
+          </div>
         </div>
+
+        <ConfirmDeleteInterventionsDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          interventions={[{ id, numeroDossier: intervention.numeroDossier }]}
+          onConfirm={() => deleteInterventionMutation.mutate({ id })}
+          isPending={deleteInterventionMutation.isPending}
+        />
 
         {validationError && (
           <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-800">
