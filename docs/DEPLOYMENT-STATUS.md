@@ -15,17 +15,21 @@ Compte : `503789396714` | Région ressources : `eu-west-3` (Paris) | State Terra
 | Rôle CI | `arn:aws:iam::503789396714:role/allofap-dev-github-actions` |
 | SSM | `/allofap/dev/*` |
 
-## PROD ✅ (infra créée)
+## PROD ✅ (Paris)
 
 | | |
 |---|---|
-| URL | https://d2gd5cpo49tihx.cloudfront.net |
-| ECR | `allofap-prod-api` |
-| S3 | `allofap-prod-frontend` |
+| URL | https://d23ez60aapzckk.cloudfront.net |
+| ECR | `503789396714.dkr.ecr.eu-west-3.amazonaws.com/allofap-prod-api` |
+| S3 front | `allofap-prod-frontend-euw3` |
+| S3 médias | `allofap-prod-medias-euw3` |
 | ECS | `allofap-prod` / `allofap-prod-api` |
+| CloudFront | `E26N5272BUB06Y` |
 | GitHub env | `production` |
 | Rôle CI | `arn:aws:iam::503789396714:role/allofap-prod-github-actions` |
-| SSM | `/allofap/prod/*` *(à remplir — Neon prod)* |
+| SSM | `/allofap/prod/*` |
+
+> **Ancienne URL prod (Oregon)** : `https://d2gd5cpo49tihx.cloudfront.net` — ne plus utiliser.
 
 ## GitHub — deux environnements
 
@@ -36,9 +40,11 @@ Voir **`docs/GITHUB-ENVIRONMENTS.md`**
 | `deploy-dev.yml` | `develop` |
 | `deploy-prod.yml` | `main` |
 
-## Actions restantes
+## Déploiement manuel
 
-1. **GitHub** : configurer secrets/variables dans `development` et `production` (valeurs différentes pour `AWS_ROLE_ARN`)
-2. **SSM prod** : `/allofap/prod/DATABASE_URL` (Neon prod), `SESSION_SECRET`, `SHOPIFY_WEBHOOK_SECRET`
-3. **Docker** : `./scripts/deploy-api-dev.sh` et `./scripts/deploy-api-prod.sh`
-4. **Front prod** : build + `aws s3 sync` vers `allofap-prod-frontend` (ou push `main` → CI)
+```bash
+./scripts/deploy-api-dev.sh    # dev Paris
+./scripts/deploy-api-prod.sh   # prod Paris
+```
+
+Front : build puis `aws s3 sync` vers le bucket `frontend_bucket` (terraform output).
