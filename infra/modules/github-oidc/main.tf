@@ -1,3 +1,10 @@
+# -----------------------------------------------------------------------------
+# Module github-oidc — authentification GitHub Actions vers AWS (sans clés statiques)
+# -----------------------------------------------------------------------------
+# Crée un rôle IAM assumable via OIDC par les workflows du repo, branche et
+# environnement GitHub configurés. Permissions : ECR push, ECS deploy, S3 front, etc.
+# -----------------------------------------------------------------------------
+
 data "aws_caller_identity" "current" {}
 
 data "aws_iam_openid_connect_provider" "github" {
@@ -79,5 +86,6 @@ resource "aws_iam_role_policy" "deploy" {
 }
 
 output "role_arn" {
-  value = aws_iam_role.github_actions.arn
+  description = "ARN du rôle IAM à configurer dans GitHub (secret AWS_ROLE_ARN ou variable d'environnement)."
+  value       = aws_iam_role.github_actions.arn
 }

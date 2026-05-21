@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.github_environment }}
     env:
-      AWS_REGION: ${{ vars.AWS_REGION || 'us-west-2' }}
+      AWS_REGION: ${{ vars.AWS_REGION || 'eu-west-3' }}
       TF_DIR: infra/environments/${{ inputs.env_name }}
       ENV_NAME: ${{ inputs.env_name }}
 

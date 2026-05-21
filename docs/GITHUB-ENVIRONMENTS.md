@@ -31,7 +31,7 @@ Repo : **https://github.com/arthour974/allofap**
 | Type | Nom | Valeur |
 |------|-----|--------|
 | Secret | `AWS_ROLE_ARN` | `arn:aws:iam::503789396714:role/allofap-dev-github-actions` |
-| Variable | `AWS_REGION` | `us-west-2` |
+| Variable | `AWS_REGION` | `eu-west-3` |
 | Variable | `TF_STATE_BUCKET` | `allofap-terraform-state-503789396714` |
 | Variable | `TF_LOCK_TABLE` | `allofap-terraform-locks` |
 
@@ -42,7 +42,7 @@ Déploiement : push sur **`develop`** ou Actions → **Deploy DEV**.
 | Type | Nom | Valeur |
 |------|-----|--------|
 | Secret | `AWS_ROLE_ARN` | `arn:aws:iam::503789396714:role/allofap-prod-github-actions` *(après `terraform apply` prod)* |
-| Variable | `AWS_REGION` | `us-west-2` |
+| Variable | `AWS_REGION` | `eu-west-3` |
 | Variable | `TF_STATE_BUCKET` | `allofap-terraform-state-503789396714` |
 | Variable | `TF_LOCK_TABLE` | `allofap-terraform-locks` |
 

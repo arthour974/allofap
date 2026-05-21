@@ -1,9 +1,6 @@
-import * as fs from "node:fs";
-import * as path from "node:path";
 import { db, interventionsTable, mediasTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
-
-const UPLOADS_DIR = path.join(process.cwd(), "uploads");
+import { deleteStoredMedia } from "./media-storage.js";
 
 /** Supprime le dossier intervention, ses médias (fichiers + lignes) et l'historique. Ne touche pas client ni véhicule. */
 export async function deleteInterventionById(id: number): Promise<boolean> {
@@ -21,10 +18,10 @@ export async function deleteInterventionById(id: number): Promise<boolean> {
     .where(eq(mediasTable.interventionId, id));
 
   for (const media of medias) {
-    const filename = path.basename(media.url);
-    const filePath = path.join(UPLOADS_DIR, filename);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+    try {
+      await deleteStoredMedia(media.url);
+    } catch (err) {
+      console.error("Erreur suppression média intervention:", err);
     }
   }
 

@@ -2,15 +2,9 @@ import { Router, type IRouter } from "express";
 import { db, mediasTable, interventionsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { AjouterMediaBody } from "@workspace/api-zod";
-import * as fs from "fs";
-import * as path from "path";
+import { deleteStoredMedia, uploadInterventionMedia } from "../lib/media-storage.js";
 
 const router: IRouter = Router();
-
-const UPLOADS_DIR = path.join(process.cwd(), "uploads");
-if (!fs.existsSync(UPLOADS_DIR)) {
-  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-}
 
 router.get("/interventions/:id/medias", async (req, res) => {
   const id = parseInt(req.params.id);
@@ -19,7 +13,9 @@ router.get("/interventions/:id/medias", async (req, res) => {
     return;
   }
 
-  const medias = await db.select().from(mediasTable)
+  const medias = await db
+    .select()
+    .from(mediasTable)
     .where(eq(mediasTable.interventionId, id))
     .orderBy(mediasTable.createdAt);
 
@@ -39,7 +35,12 @@ router.post("/interventions/:id/medias", async (req, res) => {
     return;
   }
 
-  const intervention = await db.select().from(interventionsTable).where(eq(interventionsTable.id, id)).limit(1);
+  const intervention = await db
+    .select()
+    .from(interventionsTable)
+    .where(eq(interventionsTable.id, id))
+    .limit(1);
+
   if (!intervention[0]) {
     res.status(404).json({ error: "NOT_FOUND", message: "Intervention introuvable" });
     return;
@@ -56,23 +57,34 @@ router.post("/interventions/:id/medias", async (req, res) => {
     return;
   }
 
-  const ext = path.extname(nomFichier) || ".bin";
-  const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
-  const filePath = path.join(UPLOADS_DIR, filename);
-  fs.writeFileSync(filePath, buffer);
+  if (buffer.length === 0) {
+    res.status(400).json({ error: "INVALID_DATA", message: "Fichier vide" });
+    return;
+  }
 
-  const url = `/api/uploads/${filename}`;
+  try {
+    const { url } = await uploadInterventionMedia(id, buffer, nomFichier, mimeType);
 
-  const [media] = await db.insert(mediasTable).values({
-    interventionId: id,
-    typeMedia,
-    url,
-    nomFichier,
-    mimeType,
-    tailleFichier: buffer.length,
-  }).returning();
+    const [media] = await db
+      .insert(mediasTable)
+      .values({
+        interventionId: id,
+        typeMedia,
+        url,
+        nomFichier,
+        mimeType,
+        tailleFichier: buffer.length,
+      })
+      .returning();
 
-  res.status(201).json(media);
+    res.status(201).json(media);
+  } catch (err) {
+    console.error("Erreur upload média:", err);
+    res.status(500).json({
+      error: "UPLOAD_FAILED",
+      message: "Impossible d'enregistrer le fichier",
+    });
+  }
 });
 
 router.delete("/medias/:mediaId", async (req, res) => {
@@ -88,10 +100,10 @@ router.delete("/medias/:mediaId", async (req, res) => {
     return;
   }
 
-  const filename = path.basename(media.url);
-  const filePath = path.join(UPLOADS_DIR, filename);
-  if (fs.existsSync(filePath)) {
-    fs.unlinkSync(filePath);
+  try {
+    await deleteStoredMedia(media.url);
+  } catch (err) {
+    console.error("Erreur suppression fichier média:", err);
   }
 
   await db.delete(mediasTable).where(eq(mediasTable.id, mediaId));

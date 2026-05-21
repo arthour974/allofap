@@ -1,5 +1,6 @@
-bucket         = "allofap-terraform-state-503789396714"
+bucket         = "allofap-terraform-state-ACCOUNT_ID"
 key            = "prod/terraform.tfstate"
+# Région du bucket de state (souvent celle du bootstrap, ex. us-west-2 si créé avant migration Paris)
 region         = "us-west-2"
 dynamodb_table = "allofap-terraform-locks"
 encrypt        = true

@@ -1,4 +1,4 @@
-aws_region             = "us-west-2"
-github_repository      = "arthour974/allofap"
-terraform_state_bucket = "allofap-terraform-state-503789396714"
+aws_region             = "eu-west-3"
+github_repository      = "owner/allofap"
+terraform_state_bucket = "allofap-terraform-state-ACCOUNT_ID"
 terraform_lock_table   = "allofap-terraform-locks"
