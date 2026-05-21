@@ -17,7 +17,7 @@ function getS3Config(): S3Config | null {
   const region =
     process.env.AWS_REGION?.trim() ||
     process.env.AWS_DEFAULT_REGION?.trim() ||
-    "us-west-2";
+    "eu-west-3";
 
   return {
     bucket,
@@ -34,7 +34,7 @@ function extractS3KeyFromUrl(url: string, bucket: string): string | null {
   try {
     const parsed = new URL(url);
     const host = parsed.hostname;
-    const expectedHost = `${bucket}.s3.${process.env.AWS_REGION ?? "us-west-2"}.amazonaws.com`;
+    const expectedHost = `${bucket}.s3.${process.env.AWS_REGION ?? "eu-west-3"}.amazonaws.com`;
     const altHost = `${bucket}.s3.amazonaws.com`;
 
     if (host !== expectedHost && !host.startsWith(`${bucket}.s3.`) && host !== altHost) {
