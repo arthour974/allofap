@@ -23,18 +23,27 @@ provider "aws" {
   }
 }
 
+module "media_storage" {
+  source = "../../modules/media-storage"
+
+  project_name = var.project_name
+  environment  = var.environment
+}
+
 module "api" {
   source = "../../modules/api-ecs"
 
-  project_name      = var.project_name
-  environment       = var.environment
-  aws_region        = var.aws_region
-  api_image_tag     = var.api_image_tag
-  task_cpu          = var.task_cpu
-  task_memory       = var.task_memory
-  desired_count     = var.desired_count
-  allowed_origins   = var.allowed_origins
+  project_name       = var.project_name
+  environment        = var.environment
+  aws_region         = var.aws_region
+  api_image_tag      = var.api_image_tag
+  task_cpu           = var.task_cpu
+  task_memory        = var.task_memory
+  desired_count      = var.desired_count
+  allowed_origins    = var.allowed_origins
   log_retention_days = 30
+  media_bucket_name  = module.media_storage.bucket_name
+  media_bucket_arn   = module.media_storage.bucket_arn
 }
 
 module "frontend" {
@@ -84,4 +93,12 @@ output "ecs_cluster" {
 
 output "ecs_service" {
   value = module.api.ecs_service_name
+}
+
+output "medias_bucket" {
+  value = module.media_storage.bucket_name
+}
+
+output "medias_public_url_prefix" {
+  value = module.media_storage.public_url_prefix
 }

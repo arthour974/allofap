@@ -45,6 +45,18 @@ variable "log_retention_days" {
   default = 14
 }
 
+variable "media_bucket_name" {
+  type        = string
+  default     = ""
+  description = "Bucket S3 pour les photos/médias d'intervention"
+}
+
+variable "media_bucket_arn" {
+  type        = string
+  default     = ""
+  description = "ARN du bucket médias (permissions ECS task)"
+}
+
 variable "tags" {
   type    = map(string)
   default = {}

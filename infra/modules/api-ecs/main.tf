@@ -198,6 +198,32 @@ resource "aws_iam_role" "ecs_task" {
   })
 }
 
+data "aws_iam_policy_document" "ecs_task_s3_media" {
+  count = var.media_bucket_arn != "" ? 1 : 0
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:PutObject",
+      "s3:GetObject",
+      "s3:DeleteObject",
+      "s3:ListBucket",
+    ]
+    resources = [
+      var.media_bucket_arn,
+      "${var.media_bucket_arn}/interventions/*",
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "ecs_task_s3_media" {
+  count = var.media_bucket_arn != "" ? 1 : 0
+
+  name   = "s3-medias"
+  role   = aws_iam_role.ecs_task.id
+  policy = data.aws_iam_policy_document.ecs_task_s3_media[0].json
+}
+
 resource "aws_ecs_cluster" "api" {
   name = "${var.project_name}-${var.environment}"
 
@@ -228,11 +254,14 @@ resource "aws_ecs_task_definition" "api" {
       protocol      = "tcp"
     }]
 
-    environment = [
+    environment = concat([
       { name = "NODE_ENV", value = "production" },
       { name = "PORT", value = tostring(var.container_port) },
       { name = "ALLOWED_ORIGINS", value = var.allowed_origins },
-    ]
+      { name = "AWS_REGION", value = var.aws_region },
+    ], var.media_bucket_name != "" ? [
+      { name = "MEDIA_S3_BUCKET", value = var.media_bucket_name },
+    ] : [])
 
     secrets = [
       { name = "DATABASE_URL", valueFrom = aws_ssm_parameter.database_url.arn },

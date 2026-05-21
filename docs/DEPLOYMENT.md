@@ -76,6 +76,8 @@ Dans AWS Console → **Systems Manager** → **Parameter Store**, mettre à jour
 
 Idem pour `/allofap/prod/...` en production.
 
+**Photos d'intervention (S3)** : après `terraform apply`, le bucket `allofap-{env}-medias` est créé. L'API reçoit `MEDIA_S3_BUCKET` et `AWS_REGION` via la task ECS (pas de paramètre SSM). Les fichiers sont sous `interventions/{id}/…` avec lecture publique (`https://allofap-{env}-medias.s3.us-west-2.amazonaws.com/...`). Voir les outputs Terraform `medias_bucket` et `medias_public_url_prefix`.
+
 ```bash
 aws ssm put-parameter --name "/allofap/dev/DATABASE_URL" \
   --type SecureString --value "postgresql://..." --overwrite
