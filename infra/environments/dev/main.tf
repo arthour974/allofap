@@ -1,3 +1,10 @@
+# =============================================================================
+# Environnement DEV — allofap
+# =============================================================================
+# Stack complète : médias S3, API ECS Fargate, front S3+CloudFront, OIDC GitHub.
+# Branche de déploiement : develop. Secrets applicatifs : SSM /allofap/dev/*
+# =============================================================================
+
 terraform {
   required_version = ">= 1.5.0"
 
@@ -25,19 +32,38 @@ provider "aws" {
   }
 }
 
+# Noms déterministes pour IAM ECS (connus avant apply, évite erreur Terraform sur count).
+locals {
+  medias_bucket_name = "${var.project_name}-${var.environment}-medias-euw3"
+  medias_bucket_arn  = "arn:aws:s3:::${local.medias_bucket_name}"
+}
+
+# Photos / vidéos d'intervention — URLs publiques sous interventions/*
+module "media_storage" {
+  source = "../../modules/media-storage"
+
+  project_name = var.project_name
+  environment  = var.environment
+}
+
+# API Node.js : ECR, ALB, ECS, secrets SSM, accès S3 médias
 module "api" {
   source = "../../modules/api-ecs"
 
-  project_name    = var.project_name
-  environment     = var.environment
-  aws_region      = var.aws_region
-  api_image_tag   = var.api_image_tag
-  task_cpu        = var.task_cpu
-  task_memory     = var.task_memory
-  desired_count   = var.desired_count
-  allowed_origins = var.allowed_origins
+  project_name        = var.project_name
+  environment         = var.environment
+  aws_region          = var.aws_region
+  api_image_tag       = var.api_image_tag
+  task_cpu            = var.task_cpu
+  task_memory         = var.task_memory
+  desired_count       = var.desired_count
+  allowed_origins     = var.allowed_origins
+  enable_media_bucket = true
+  media_bucket_name   = local.medias_bucket_name
+  media_bucket_arn    = local.medias_bucket_arn
 }
 
+# Build Vite → S3 ; CloudFront sert le SPA et proxy /api vers l'ALB
 module "frontend" {
   source = "../../modules/static-frontend"
 
@@ -46,6 +72,7 @@ module "frontend" {
   api_origin_domain   = module.api.alb_dns_name
 }
 
+# Rôle IAM pour GitHub Actions (environnement GitHub « development »)
 module "github_oidc" {
   source = "../../modules/github-oidc"
 
@@ -60,29 +87,46 @@ module "github_oidc" {
 }
 
 output "website_url" {
-  value = module.frontend.website_url
+  description = "URL HTTPS du front dev (CloudFront)."
+  value       = module.frontend.website_url
 }
 
 output "cloudfront_distribution_id" {
-  value = module.frontend.cloudfront_distribution_id
+  description = "ID pour invalider le cache CloudFront après deploy front."
+  value       = module.frontend.cloudfront_distribution_id
 }
 
 output "frontend_bucket" {
-  value = module.frontend.bucket_name
+  description = "Bucket S3 cible du sync du build frontend."
+  value       = module.frontend.bucket_name
 }
 
 output "ecr_repository_url" {
-  value = module.api.ecr_repository_url
+  description = "Registre Docker pour pousser l'image API (deploy-api-dev.sh)."
+  value       = module.api.ecr_repository_url
 }
 
 output "github_actions_role_arn" {
-  value = module.github_oidc.role_arn
+  description = "ARN du rôle OIDC à renseigner dans GitHub (AWS_ROLE_ARN)."
+  value       = module.github_oidc.role_arn
 }
 
 output "ecs_cluster" {
-  value = module.api.ecs_cluster_name
+  description = "Cluster ECS contenant le service API dev."
+  value       = module.api.ecs_cluster_name
 }
 
 output "ecs_service" {
-  value = module.api.ecs_service_name
+  description = "Service ECS à redéployer après un nouveau push d'image."
+  value       = module.api.ecs_service_name
+}
+
+output "medias_bucket" {
+  description = "Bucket des photos d'intervention (MEDIA_S3_BUCKET côté API)."
+  value       = module.media_storage.bucket_name
+}
+
+output "medias_public_url_prefix" {
+  description = "Préfixe des URLs publiques S3 des médias (sans nom de fichier)."
+  value       = module.media_storage.public_url_prefix
 }

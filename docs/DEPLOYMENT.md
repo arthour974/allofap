@@ -15,6 +15,18 @@ Environnements :
 | dev  | `develop`      | `infra/environments/dev` | `development`      |
 | prod | `main`         | `infra/environments/prod`| `production`       |
 
+**Région AWS** : ressources applicatives en **Paris (`eu-west-3`)** via `aws_region` dans `terraform.tfvars`. Le **state Terraform** reste dans le bucket bootstrap (souvent `us-west-2`) : voir `region` dans `backend.tfvars`, pas `aws_region`.
+
+**Neon** : la base Postgres est indépendante d’AWS ; vous pouvez garder un endpoint Neon US ou en créer un plus proche (ex. `eu-central-1`) sans changer le code.
+
+### Migrer de Oregon (`us-west-2`) vers Paris
+
+1. Mettre `aws_region = "eu-west-3"` dans `terraform.tfvars` (dev/prod).
+2. Mettre à jour GitHub variable `AWS_REGION` → `eu-west-3` et `.env` local `AWS_REGION=eu-west-3`.
+3. `terraform plan` : Terraform **recrée** ECS/S3/ECR/ALB en `eu-west-3` et **détruit** les anciennes ressources `us-west-2` (nouvelles URLs CloudFront, vider/recréer buckets si besoin).
+4. Re-déployer images : `./scripts/deploy-api-dev.sh` (ECR Paris).
+5. **Ne pas** changer `region` dans `backend.tfvars` tant que le bucket state est en Oregon.
+
 ---
 
 ## Ce que vous devez faire (checklist)
@@ -33,7 +45,7 @@ Prérequis : `aws sts get-caller-identity` doit fonctionner (`aws configure` ave
 ```bash
 cd infra/bootstrap
 terraform init
-terraform apply -var="aws_region=us-west-2"
+terraform apply -var="aws_region=eu-west-3"
 ```
 
 Notez les outputs `state_bucket` et `lock_table`.
@@ -76,6 +88,8 @@ Dans AWS Console → **Systems Manager** → **Parameter Store**, mettre à jour
 
 Idem pour `/allofap/prod/...` en production.
 
+**Photos d'intervention (S3)** : après `terraform apply`, le bucket `allofap-{env}-medias` est créé. L'API reçoit `MEDIA_S3_BUCKET` et `AWS_REGION` via la task ECS (pas de paramètre SSM). Les fichiers sont sous `interventions/{id}/…` avec lecture publique (`https://allofap-{env}-medias.s3.eu-west-3.amazonaws.com/...`). Voir les outputs Terraform `medias_bucket` et `medias_public_url_prefix`.
+
 ```bash
 aws ssm put-parameter --name "/allofap/dev/DATABASE_URL" \
   --type SecureString --value "postgresql://..." --overwrite
@@ -92,7 +106,7 @@ Chaque environnement a ses **propres** valeurs (même noms de clés, contenus di
 | Secret / Variable | DEV (`development`) | PROD (`production`) |
 |-------------------|---------------------|---------------------|
 | Secret `AWS_ROLE_ARN` | rôle `allofap-**dev**-github-actions` | rôle `allofap-**prod**-github-actions` |
-| Variable `AWS_REGION` | `us-west-2` | `us-west-2` |
+| Variable `AWS_REGION` | `eu-west-3` | `eu-west-3` |
 | Variable `TF_STATE_BUCKET` | bucket state | idem |
 | Variable `TF_LOCK_TABLE` | table lock | idem |
 
@@ -118,7 +132,7 @@ Le premier `terraform apply` crée l’ECR vide. Ensuite :
 - soit en local :
 
 ```bash
-aws ecr get-login-password --region us-west-2 | docker login ...
+aws ecr get-login-password --region eu-west-3 | docker login ...
 docker build -t <ecr_url>:latest .
 docker push <ecr_url>:latest
 ```

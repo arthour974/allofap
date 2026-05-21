@@ -11,6 +11,12 @@
     },
     {
       "path": "./lib/api-zod"
+    },
+    {
+      "path": "./artifacts/frontend"
+    },
+    {
+      "path": "./artifacts/backend"
     }
   ]
 }

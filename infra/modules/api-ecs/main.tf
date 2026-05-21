@@ -1,3 +1,13 @@
+# -----------------------------------------------------------------------------
+# Module api-ecs — API Express sur ECS Fargate
+# -----------------------------------------------------------------------------
+# - ECR : registre Docker de l'API
+# - ALB : load balancer HTTP public vers le conteneur
+# - ECS Fargate : service + task definition (secrets SSM, env MEDIA_S3_BUCKET si activé)
+# - SSM : DATABASE_URL, SESSION_SECRET, SHOPIFY_WEBHOOK_SECRET (valeurs à renseigner à la main)
+# - IAM task : accès S3 médias si enable_media_bucket = true
+# -----------------------------------------------------------------------------
+
 data "aws_caller_identity" "current" {}
 
 data "aws_vpc" "default" {
@@ -198,6 +208,33 @@ resource "aws_iam_role" "ecs_task" {
   })
 }
 
+# Droits d'upload/suppression des photos d'intervention sur le bucket médias.
+data "aws_iam_policy_document" "ecs_task_s3_media" {
+  count = var.enable_media_bucket ? 1 : 0
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:PutObject",
+      "s3:GetObject",
+      "s3:DeleteObject",
+      "s3:ListBucket",
+    ]
+    resources = [
+      var.media_bucket_arn,
+      "${var.media_bucket_arn}/interventions/*",
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "ecs_task_s3_media" {
+  count = var.enable_media_bucket ? 1 : 0
+
+  name   = "s3-medias"
+  role   = aws_iam_role.ecs_task.id
+  policy = data.aws_iam_policy_document.ecs_task_s3_media[0].json
+}
+
 resource "aws_ecs_cluster" "api" {
   name = "${var.project_name}-${var.environment}"
 
@@ -228,11 +265,14 @@ resource "aws_ecs_task_definition" "api" {
       protocol      = "tcp"
     }]
 
-    environment = [
+    environment = concat([
       { name = "NODE_ENV", value = "production" },
       { name = "PORT", value = tostring(var.container_port) },
       { name = "ALLOWED_ORIGINS", value = var.allowed_origins },
-    ]
+      { name = "AWS_REGION", value = var.aws_region },
+    ], var.enable_media_bucket ? [
+      { name = "MEDIA_S3_BUCKET", value = var.media_bucket_name },
+    ] : [])
 
     secrets = [
       { name = "DATABASE_URL", valueFrom = aws_ssm_parameter.database_url.arn },
@@ -318,17 +358,21 @@ resource "aws_ssm_parameter" "shopify_webhook_secret" {
 }
 
 output "ecr_repository_url" {
-  value = aws_ecr_repository.api.repository_url
+  description = "URL du registre ECR pour docker push (CI/CD ou script deploy-api)."
+  value       = aws_ecr_repository.api.repository_url
 }
 
 output "alb_dns_name" {
-  value = aws_lb.api.dns_name
+  description = "Nom DNS de l'ALB ; utilisé par CloudFront comme origine /api/*."
+  value       = aws_lb.api.dns_name
 }
 
 output "ecs_cluster_name" {
-  value = aws_ecs_cluster.api.name
+  description = "Nom du cluster ECS (ex. allofap-dev)."
+  value       = aws_ecs_cluster.api.name
 }
 
 output "ecs_service_name" {
-  value = aws_ecs_service.api.name
+  description = "Nom du service ECS à mettre à jour après un nouveau déploiement d'image."
+  value       = aws_ecs_service.api.name
 }

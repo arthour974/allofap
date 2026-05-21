@@ -13,12 +13,20 @@ import {
   useSupprimerMedia,
   useUpdateClient,
   useUpdateVehicule,
+  useDeleteIntervention,
+  getListInterventionsQueryKey,
   StatutIntervention,
   DiagnosticAccessoires,
   DiagnosticCeramique,
   ResultatFinal,
   AjouterMediaBodyTypeMedia,
 } from "@workspace/api-client-react";
+import type {
+  HistoriqueEntry,
+  Media,
+  RapportPdfResponse,
+} from "@workspace/api-client-react";
+import type { CheckedState } from "@radix-ui/react-checkbox";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +34,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { STATUT_LABELS, STATUT_COLORS, WORKFLOW_ORDER } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
-import { AlertCircle, CheckCircle, ChevronRight, FileText, Download, Save, AlertTriangle, Upload, Trash2, Image, Video, MapPin, Pencil, X } from "lucide-react";
+import { AlertCircle, CheckCircle, ChevronRight, FileText, Download, Save, AlertTriangle, Upload, Trash2, Image, Video, MapPin, Pencil, X, Link2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -34,6 +42,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ConfirmDeleteInterventionsDialog } from "@/components/interventions/ConfirmDeleteInterventionsDialog";
 
 export default function DetailIntervention() {
   const params = useParams();
@@ -43,6 +52,7 @@ export default function DetailIntervention() {
   const queryClient = useQueryClient();
 
   const [validationError, setValidationError] = useState<{ error: string, champsManquants: string[] } | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState(false);
   const [editingVehicule, setEditingVehicule] = useState(false);
   const [clientForm, setClientForm] = useState({
@@ -150,6 +160,27 @@ export default function DetailIntervention() {
     },
   });
 
+  const deleteInterventionMutation = useDeleteIntervention({
+    mutation: {
+      onSuccess: () => {
+        setDeleteDialogOpen(false);
+        toast({
+          title: "Intervention supprimée",
+          description: "Le dossier a été supprimé. Le client et le véhicule sont conservés.",
+        });
+        queryClient.invalidateQueries({ queryKey: getListInterventionsQueryKey() });
+        setLocation("/interventions");
+      },
+      onError: () => {
+        toast({
+          title: "Erreur",
+          description: "Impossible de supprimer cette intervention.",
+          variant: "destructive",
+        });
+      },
+    },
+  });
+
   const supprimerMediaMutation = useSupprimerMedia({
     mutation: {
       onSuccess: () => {
@@ -187,7 +218,7 @@ export default function DetailIntervention() {
 
   const genererPdfMutation = useGenererRapportPdf({
     mutation: {
-      onSuccess: (data) => {
+      onSuccess: (data: RapportPdfResponse) => {
         toast({ title: "Succès", description: "Rapport PDF généré avec succès." });
         queryClient.invalidateQueries({ queryKey: getGetInterventionQueryKey(id) });
         window.open(data.url, "_blank");
@@ -198,7 +229,7 @@ export default function DetailIntervention() {
     }
   });
 
-  // State for forms
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- formulaire workflow hétérogène (inputs vides "")
   const [formData, setFormData] = useState<any>({});
   const initializedForId = useRef<number | null>(null);
 
@@ -235,11 +266,11 @@ export default function DetailIntervention() {
   }, [intervention, id]);
 
   const handleChange = (field: string, value: unknown) => {
-    setFormData((prev: Record<string, unknown>) => ({ ...prev, [field]: value }));
+    setFormData((prev: typeof formData) => ({ ...prev, [field]: value }));
   };
 
   const handleSave = (fields: string[]) => {
-    const dataToSave: any = {};
+    const dataToSave: Record<string, unknown> = {}; // champs envoyés à l'API
     fields.forEach(f => {
       if (formData[f] !== "") dataToSave[f] = formData[f];
     });
@@ -364,18 +395,38 @@ export default function DetailIntervention() {
             </p>
           </div>
 
-          {!isTermine && (
-            <Button 
-              size="lg" 
-              className="h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-md"
-              onClick={() => avancerMutation.mutate({ id })}
-              disabled={avancerMutation.isPending}
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-12 border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"
+              onClick={() => setDeleteDialogOpen(true)}
+              disabled={deleteInterventionMutation.isPending}
             >
-              Étape suivante
-              <ChevronRight className="w-5 h-5 ml-2" />
+              <Trash2 className="w-5 h-5 mr-2" />
+              Supprimer
             </Button>
-          )}
+            {!isTermine && (
+              <Button
+                size="lg"
+                className="h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-md"
+                onClick={() => avancerMutation.mutate({ id })}
+                disabled={avancerMutation.isPending}
+              >
+                Étape suivante
+                <ChevronRight className="w-5 h-5 ml-2" />
+              </Button>
+            )}
+          </div>
         </div>
+
+        <ConfirmDeleteInterventionsDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          interventions={[{ id, numeroDossier: intervention.numeroDossier }]}
+          onConfirm={() => deleteInterventionMutation.mutate({ id })}
+          isPending={deleteInterventionMutation.isPending}
+        />
 
         {validationError && (
           <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-800">
@@ -433,7 +484,7 @@ export default function DetailIntervention() {
                 </div>
                 <div className="space-y-2">
                   <Label>Diagnostic Accessoires</Label>
-                  <Select value={formData.diagnosticAccessoires} onValueChange={v => handleChange("diagnosticAccessoires", v)}>
+                  <Select value={formData.diagnosticAccessoires} onValueChange={(v: string) => handleChange("diagnosticAccessoires", v)}>
                     <SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value={DiagnosticAccessoires.OK}>OK</SelectItem>
@@ -446,7 +497,7 @@ export default function DetailIntervention() {
                 </div>
                 <div className="space-y-2">
                   <Label>Diagnostic Céramique</Label>
-                  <Select value={formData.diagnosticCeramique} onValueChange={v => handleChange("diagnosticCeramique", v)}>
+                  <Select value={formData.diagnosticCeramique} onValueChange={(v: string) => handleChange("diagnosticCeramique", v)}>
                     <SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value={DiagnosticCeramique.SAIN}>Sain</SelectItem>
@@ -478,7 +529,7 @@ export default function DetailIntervention() {
                   <Checkbox 
                     id="validationClient" 
                     checked={formData.validationClientReception} 
-                    onCheckedChange={(c) => {
+                    onCheckedChange={(c: CheckedState) => {
                       handleChange("validationClientReception", !!c);
                       handleSave(["validationClientReception"]);
                     }}
@@ -503,7 +554,7 @@ export default function DetailIntervention() {
                   <Checkbox 
                     id="validationEntreeAtelier" 
                     checked={formData.validationEntreeAtelier} 
-                    onCheckedChange={(c) => {
+                    onCheckedChange={(c: CheckedState) => {
                       handleChange("validationEntreeAtelier", !!c);
                       handleSave(["validationEntreeAtelier"]);
                     }}
@@ -517,7 +568,7 @@ export default function DetailIntervention() {
                     <Checkbox 
                       id="nettoyageCommence" 
                       checked={formData.nettoyageCommence} 
-                      onCheckedChange={(c) => {
+                      onCheckedChange={(c: CheckedState) => {
                         handleChange("nettoyageCommence", !!c);
                         handleSave(["nettoyageCommence"]);
                       }}
@@ -528,7 +579,7 @@ export default function DetailIntervention() {
                     <Checkbox 
                       id="nettoyageTermine" 
                       checked={formData.nettoyageTermine} 
-                      onCheckedChange={(c) => {
+                      onCheckedChange={(c: CheckedState) => {
                         handleChange("nettoyageTermine", !!c);
                         handleSave(["nettoyageTermine"]);
                       }}
@@ -566,7 +617,7 @@ export default function DetailIntervention() {
                     <Checkbox 
                       id="sechageCommence" 
                       checked={formData.sechageCommence} 
-                      onCheckedChange={(c) => {
+                      onCheckedChange={(c: CheckedState) => {
                         handleChange("sechageCommence", !!c);
                         handleSave(["sechageCommence"]);
                       }}
@@ -577,7 +628,7 @@ export default function DetailIntervention() {
                     <Checkbox 
                       id="sechageTermine" 
                       checked={formData.sechageTermine} 
-                      onCheckedChange={(c) => {
+                      onCheckedChange={(c: CheckedState) => {
                         handleChange("sechageTermine", !!c);
                         handleSave(["sechageTermine"]);
                       }}
@@ -640,7 +691,7 @@ export default function DetailIntervention() {
 
                 <div className="space-y-2">
                   <Label>Résultat Final</Label>
-                  <Select value={formData.resultatFinal} onValueChange={v => handleChange("resultatFinal", v)}>
+                  <Select value={formData.resultatFinal} onValueChange={(v: string) => handleChange("resultatFinal", v)}>
                     <SelectTrigger className="max-w-md"><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value={ResultatFinal.NETTOYE}>Nettoyé avec succès</SelectItem>
@@ -654,7 +705,7 @@ export default function DetailIntervention() {
                   <Checkbox 
                     id="validationTechnicien" 
                     checked={formData.validationTechnicien} 
-                    onCheckedChange={(c) => {
+                    onCheckedChange={(c: CheckedState) => {
                       handleChange("validationTechnicien", !!c);
                       handleSave(["validationTechnicien"]);
                     }}
@@ -690,7 +741,7 @@ export default function DetailIntervention() {
                         <Checkbox 
                           id={item.id} 
                           checked={formData[item.id]} 
-                          onCheckedChange={(c) => {
+                          onCheckedChange={(c: CheckedState) => {
                             handleChange(item.id, !!c);
                             handleSave([item.id]);
                           }}
@@ -708,7 +759,7 @@ export default function DetailIntervention() {
                       <Checkbox 
                         id="clientInforme" 
                         checked={formData.clientInforme} 
-                        onCheckedChange={(c) => {
+                        onCheckedChange={(c: CheckedState) => {
                           handleChange("clientInforme", !!c);
                           handleSave(["clientInforme"]);
                         }}
@@ -719,7 +770,7 @@ export default function DetailIntervention() {
                       <Checkbox 
                         id="fapRestitue" 
                         checked={formData.fapRestitue} 
-                        onCheckedChange={(c) => {
+                        onCheckedChange={(c: CheckedState) => {
                           handleChange("fapRestitue", !!c);
                           handleSave(["fapRestitue"]);
                         }}
@@ -974,7 +1025,7 @@ export default function DetailIntervention() {
               <CardContent className="p-6">
                 {intervention.medias && intervention.medias.length > 0 ? (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {intervention.medias.map((media) => {
+                    {intervention.medias.map((media: Media) => {
                       const isVideo = media.mimeType?.startsWith("video/");
                       const typeLabel: Record<string, string> = {
                         PHOTO_FAP_ENTREE: "FAP Entrée",
@@ -995,6 +1046,19 @@ export default function DetailIntervention() {
                           )}
                           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-2">
                             <span className="text-white text-xs font-medium text-center">{typeLabel[media.typeMedia] || media.typeMedia}</span>
+                            {media.url.startsWith("http") && (
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                className="h-7 text-xs gap-1"
+                                onClick={async () => {
+                                  await navigator.clipboard.writeText(media.url);
+                                  toast({ title: "Lien copié", description: "URL publique copiée dans le presse-papiers." });
+                                }}
+                              >
+                                <Link2 className="w-3 h-3" /> Copier le lien
+                              </Button>
+                            )}
                             {!isTermine && (
                               <Button
                                 size="sm"
@@ -1085,7 +1149,7 @@ export default function DetailIntervention() {
               </CardHeader>
               <CardContent className="p-0">
                 <div className="divide-y divide-slate-100">
-                  {historique?.map((entry) => (
+                  {historique?.map((entry: HistoriqueEntry) => (
                     <div key={entry.id} className="p-4 flex items-start gap-4 hover:bg-slate-50/50 transition-colors">
                       <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                         {entry.nouveauStatut ? <CheckCircle className="w-5 h-5 text-primary" /> : <Save className="w-5 h-5 text-slate-500" />}

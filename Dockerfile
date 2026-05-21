@@ -11,7 +11,8 @@ COPY artifacts/backend ./artifacts/backend
 
 RUN pnpm install --frozen-lockfile
 RUN pnpm --filter @workspace/backend run build
-RUN pnpm prune --prod --config.confirmModulesPurge=false
+# pnpm prune à la racine supprime des deps hoistées (@aws-sdk/*) alors qu'esbuild les externalise.
+RUN pnpm --filter @workspace/backend deploy --prod --legacy /out
 
 FROM node:22-alpine AS runner
 
@@ -20,9 +21,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=8080
 
-COPY --from=builder /app /app
-
-WORKDIR /app/artifacts/backend
+COPY --from=builder /out /app
 
 EXPOSE 8080
 

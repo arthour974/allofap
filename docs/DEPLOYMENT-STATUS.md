@@ -1,14 +1,15 @@
 # État du déploiement AWS
 
-Compte : `503789396714` | Région : `us-west-2`
+Compte : `503789396714` | Région ressources : `eu-west-3` (Paris) | State Terraform : `us-west-2` (bucket bootstrap)
 
-## DEV ✅
+## DEV ✅ (Paris)
 
 | | |
 |---|---|
-| URL | https://d1ng31qot2lqlk.cloudfront.net |
-| ECR | `allofap-dev-api` |
-| S3 | `allofap-dev-frontend` |
+| URL | https://d1g5u7svim4wpo.cloudfront.net |
+| ECR | `503789396714.dkr.ecr.eu-west-3.amazonaws.com/allofap-dev-api` |
+| S3 front | `allofap-dev-frontend-euw3` |
+| S3 médias | `allofap-dev-medias-euw3` |
 | ECS | `allofap-dev` / `allofap-dev-api` |
 | GitHub env | `development` |
 | Rôle CI | `arn:aws:iam::503789396714:role/allofap-dev-github-actions` |

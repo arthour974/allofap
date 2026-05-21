@@ -326,6 +326,32 @@ paths:
               schema:
                 $ref: "#/components/schemas/InterventionDetail"
 
+  /interventions/supprimer-en-masse:
+    post:
+      operationId: supprimerInterventionsEnMasse
+      tags: [interventions]
+      summary: Supprimer plusieurs interventions
+      description: Supprime uniquement les dossiers intervention (médias et historique associés). Les clients et véhicules ne sont pas supprimés.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupprimerInterventionsBody"
+      responses:
+        "200":
+          description: Résultat de la suppression
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupprimerInterventionsResponse"
+        "400":
+          description: Requête invalide
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /interventions/{id}:
     get:
       operationId: getIntervention
@@ -373,6 +399,30 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/InterventionDetail"
+    delete:
+      operationId: deleteIntervention
+      tags: [interventions]
+      summary: Supprimer une intervention
+      description: Supprime uniquement le dossier intervention (médias et historique associés). Le client et le véhicule ne sont pas supprimés.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Intervention supprimée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "404":
+          description: Intervention non trouvée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /interventions/{id}/avancer:
     post:
@@ -556,6 +606,38 @@ components:
           type: string
       required:
         - message
+
+    SupprimerInterventionsBody:
+      type: object
+      properties:
+        ids:
+          type: array
+          items:
+            type: integer
+          minItems: 1
+      required:
+        - ids
+
+    SupprimerInterventionsResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        supprimees:
+          type: integer
+        idsSupprimees:
+          type: array
+          items:
+            type: integer
+        idsIntrouvables:
+          type: array
+          items:
+            type: integer
+      required:
+        - message
+        - supprimees
+        - idsSupprimees
+        - idsIntrouvables
 
     ValidationErrorResponse:
       type: object

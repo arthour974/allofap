@@ -61,11 +61,13 @@ resource "aws_dynamodb_table" "terraform_locks" {
 }
 
 output "state_bucket" {
-  value = aws_s3_bucket.terraform_state.id
+  description = "Bucket S3 pour les fichiers .tfstate de dev/prod — à copier dans backend.tfvars."
+  value       = aws_s3_bucket.terraform_state.id
 }
 
 output "lock_table" {
-  value = aws_dynamodb_table.terraform_locks.name
+  description = "Table DynamoDB pour éviter deux terraform apply simultanés sur le même state."
+  value       = aws_dynamodb_table.terraform_locks.name
 }
 
 resource "aws_iam_openid_connect_provider" "github" {
@@ -80,7 +82,8 @@ resource "aws_iam_openid_connect_provider" "github" {
 }
 
 output "backend_config_snippet" {
-  value = <<-EOT
+  description = "Bloc prêt à coller dans infra/environments/*/backend.tfvars après le bootstrap."
+  value       = <<-EOT
     bucket         = "${aws_s3_bucket.terraform_state.id}"
     dynamodb_table = "${aws_dynamodb_table.terraform_locks.name}"
     region         = "${var.aws_region}"

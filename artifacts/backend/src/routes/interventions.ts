@@ -6,8 +6,10 @@ import { eq, ilike, or, sql, and, gte, lte, count } from "drizzle-orm";
 import {
   CreateInterventionBody,
   UpdateInterventionBody,
+  SupprimerInterventionsEnMasseBody as   SupprimerInterventionsEnMasseBody,
 } from "@workspace/api-zod";
 import { verifyShopifyWebhook } from "../lib/shopify-webhook";
+import { deleteInterventionById } from "../lib/delete-intervention.js";
 
 const router: IRouter = Router();
 
@@ -211,6 +213,33 @@ router.post("/interventions", async (req, res) => {
   res.status(201).json(full);
 });
 
+router.post("/interventions/supprimer-en-masse", async (req, res) => {
+  const body = SupprimerInterventionsEnMasseBody.safeParse(req.body);
+  if (!body.success) {
+    res.status(400).json({ error: "VALIDATION_ERROR", message: "Liste d'identifiants invalide" });
+    return;
+  }
+
+  const idsSupprimees: number[] = [];
+  const idsIntrouvables: number[] = [];
+
+  for (const id of body.data.ids) {
+    const ok = await deleteInterventionById(id);
+    if (ok) idsSupprimees.push(id);
+    else idsIntrouvables.push(id);
+  }
+
+  res.json({
+    message:
+      idsSupprimees.length === 1
+        ? "1 intervention supprimée"
+        : `${idsSupprimees.length} interventions supprimées`,
+    supprimees: idsSupprimees.length,
+    idsSupprimees,
+    idsIntrouvables,
+  });
+});
+
 router.get("/interventions/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   if (isNaN(id)) {
@@ -279,6 +308,22 @@ router.put("/interventions/:id", async (req, res) => {
 
   const full = await getInterventionFull(updated.id);
   res.json(full);
+});
+
+router.delete("/interventions/:id", async (req, res) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "BAD_REQUEST", message: "ID invalide" });
+    return;
+  }
+
+  const deleted = await deleteInterventionById(id);
+  if (!deleted) {
+    res.status(404).json({ error: "NOT_FOUND", message: "Intervention introuvable" });
+    return;
+  }
+
+  res.json({ message: "Intervention supprimée" });
 });
 
 function verifierConditions(
