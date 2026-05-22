@@ -135,6 +135,18 @@ export const UpdateClientResponse = zod.object({
 
 
 /**
+ * @summary Supprimer un client
+ */
+export const DeleteClientParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteClientResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
  * @summary Liste des véhicules
  */
 export const ListVehiculesQueryParams = zod.object({

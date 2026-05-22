@@ -14,6 +14,9 @@ import Clients from "@/pages/clients/index";
 import Interventions from "@/pages/interventions/index";
 import NouveauDossier from "@/pages/interventions/nouveau";
 import DetailIntervention from "@/pages/interventions/detail";
+import NouveauClient from "@/pages/clients/nouveau";
+import DetailClient from "./pages/clients/detail";
+
 
 const queryClient = new QueryClient();
 
@@ -61,6 +64,12 @@ function Router() {
       </Route>
       <Route path="/clients">
         {() => <ProtectedRoute component={Clients} />}
+      </Route>
+      <Route path="/clients/:id">
+        {() => <ProtectedRoute component={DetailClient} />}
+      </Route>
+      <Route path="/clients/nouveau">
+        {() => <ProtectedRoute component={NouveauClient} />}
       </Route>
       <Route path="/statistiques">
         {() => <ProtectedRoute component={Statistiques} />}

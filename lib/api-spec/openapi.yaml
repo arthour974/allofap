@@ -137,7 +137,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Client"
-
+       
   /clients/{id}:
     get:
       operationId: getClient
@@ -185,7 +185,28 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Client"
-
+    delete:
+      operationId: deleteClient
+      summary: Supprimer un client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Clien supprimée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "404":
+          description: Client non trouvée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /vehicules:
     get:
       operationId: listVehicules

@@ -660,6 +660,76 @@ export const useUpdateClient = <TError = ErrorType<unknown>,
       return useMutation(getUpdateClientMutationOptions(options));
     }
 
+export const getDeleteClientUrl = (id: number,) => {
+
+
+
+
+  return `/api/clients/${id}`
+}
+
+/**
+ * @summary Supprimer un client
+ */
+export const deleteClient = async (id: number, options?: RequestInit): Promise<MessageResponse> => {
+
+  return customFetch<MessageResponse>(getDeleteClientUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteClientMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteClient>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteClient>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteClient'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteClient>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteClient(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteClientMutationResult = NonNullable<Awaited<ReturnType<typeof deleteClient>>>
+
+    export type DeleteClientMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Supprimer un client
+ */
+export const useDeleteClient = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteClient>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteClient>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteClientMutationOptions(options));
+    }
+
 export const getListVehiculesUrl = (params?: ListVehiculesParams,) => {
   const normalizedParams = new URLSearchParams();
 

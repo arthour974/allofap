@@ -91,4 +91,21 @@ router.put("/clients/:id", async (req, res) => {
   res.json(client);
 });
 
+router.delete("/clients/:id", async (req, res) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "BAD_REQUEST", message: "ID invalide" });
+    return;
+  }
+
+  const [client] = await db.select().from(clientsTable).where(eq(clientsTable.id, id));
+  if (!client) {
+    res.status(404).json({ error: "NOT_FOUND", message: "Client introuvable" });
+    return;
+  }
+
+  await db.delete(clientsTable).where(eq(clientsTable.id, id))
+
+})
+
 export default router;
