@@ -5,12 +5,20 @@
 name: Deploy PROD
 
 on:
-  # Après merge d'une PR vers main (push sur main → CI → deploy si CI OK)
+  # Push direct (fiable après merge develop → main)
+  push:
+    branches:
+      - main
+  # En secours : deploy après CI réussie sur main
   workflow_run:
     workflows: ["CI"]
     types: [completed]
     branches: [main]
   workflow_dispatch:
+
+concurrency:
+  group: deploy-prod-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions:
   id-token: write
@@ -21,6 +29,7 @@ jobs:
   deploy:
     # Ne pas déployer sur échec CI ni sur CI d'une PR (seulement push main post-merge)
     if: |
+      github.event_name == 'push' ||
       github.event_name == 'workflow_dispatch' ||
       (
         github.event_name == 'workflow_run' &&
