@@ -5,7 +5,7 @@ import { formatDate } from "@/lib/utils";
 import { AlertCircle, CheckCircle, ChevronRight, FileText, Download, Save, AlertTriangle, Upload, Trash2, Image, Video, MapPin, Pencil, X, Link2 } from "lucide-react";
 import { useParams, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { getGetClientQueryKey, getListClientsQueryKey, updateClient, useDeleteClient, useGetClient } from "@workspace/api-client-react";
+import { getGetClientQueryKey, getListClientsQueryKey, useDeleteClient, useGetClient } from "@workspace/api-client-react";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { useUpdateClient } from "@workspace/api-client-react";
@@ -88,12 +88,12 @@ export default function DetailClient () {
     const deleteMutation = useDeleteClient({
         mutation: {
             onSuccess: () => {
-                toast({ title: "Enregistré", description: "Les modifications ont été sauvegardées." });
+                toast({ title: "Client supprimé", description: "Le client a été supprimé avec succès." });
                 queryClient.invalidateQueries({ queryKey: getListClientsQueryKey() });
                 setLocation("/clients");
             },
             onError: () => {
-                toast({ title: "Erreur", description: "Impossible d'enregistrer les modifications.", variant: "destructive" });
+                toast({ title: "Erreur", description: "Impossible de supprimer le client.", variant: "destructive" });
             }
         }
     })
@@ -102,7 +102,6 @@ export default function DetailClient () {
      * Delete client 
      */
     function handleDeleteClient(id: number) {
-        console.log(id)
         deleteMutation.mutate({ id })
     }
 

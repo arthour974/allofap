@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const loginSchema = z.object({
@@ -49,14 +48,16 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-xl border-t-4 border-t-primary">
         <CardHeader className="space-y-2 pb-6 text-center">
-          <div className="mx-auto w-16 h-16 bg-primary text-primary-foreground rounded-xl flex items-center justify-center mb-4 shadow-sm">
-            <Settings className="w-8 h-8" />
-          </div>
-          <CardTitle className="text-2xl font-bold">FAP Expert</CardTitle>
-          <CardDescription className="text-slate-600">
+          <img
+            src="/logo-allofap.png"
+            alt="AlloFAP"
+            className="mx-auto h-16 w-auto max-w-[400px] object-contain mb-2"
+          />
+          <CardTitle className="text-2xl font-bold">AlloFAP</CardTitle>
+          <CardDescription className="text-muted-foreground">
             Interface de gestion et suivi atelier
           </CardDescription>
         </CardHeader>

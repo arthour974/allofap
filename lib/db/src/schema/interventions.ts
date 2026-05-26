@@ -36,7 +36,7 @@ export const interventionsTable = pgTable("interventions", {
   id: serial("id").primaryKey(),
   numeroDossier: text("numero_dossier").notNull().unique(),
   clientId: integer("client_id").notNull().references(() => clientsTable.id),
-  vehiculeId: integer("vehicule_id").notNull().references(() => vehiculesTable.id),
+  vehiculeId: integer("vehicule_id").references(() => vehiculesTable.id),
   statut: statutInterventionEnum("statut").notNull().default("CREATION"),
 
   dateCreation: timestamp("date_creation").defaultNow().notNull(),
@@ -84,6 +84,9 @@ export const interventionsTable = pgTable("interventions", {
   commentaireInterne: text("commentaire_interne"),
   rapportPdfUrl: text("rapport_pdf_url"),
   signatureClientUrl: text("signature_client_url"),
+
+  shareToken: text("share_token").unique(),
+  shareTokenCreatedAt: timestamp("share_token_created_at"),
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

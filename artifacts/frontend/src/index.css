@@ -60,45 +60,46 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+/* AlloFAP — couleurs alignées sur https://allofap.re/ (CTA #27AE60, texte #121212) */
 :root {
-  --background: 210 20% 98%;
-  --foreground: 222 47% 11%;
-  
+  --background: 0 0% 97%;
+  --foreground: 0 0% 7%;
+
   --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
-  --card-border: 214 32% 91%;
-  
+  --card-foreground: 0 0% 7%;
+  --card-border: 0 0% 90%;
+
   --popover: 0 0% 100%;
-  --popover-foreground: 222 47% 11%;
-  --popover-border: 214 32% 91%;
-  
-  --primary: 214 52% 24%;
-  --primary-foreground: 210 40% 98%;
-  
-  --secondary: 210 40% 96%;
-  --secondary-foreground: 222 47% 11%;
-  
-  --muted: 210 40% 96%;
-  --muted-foreground: 215 16% 47%;
-  
-  --accent: 210 40% 96%;
-  --accent-foreground: 222 47% 11%;
-  
+  --popover-foreground: 0 0% 7%;
+  --popover-border: 0 0% 90%;
+
+  --primary: 145 63% 42%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 0 0% 95%;
+  --secondary-foreground: 0 0% 7%;
+
+  --muted: 0 0% 95%;
+  --muted-foreground: 0 0% 40%;
+
+  --accent: 145 40% 94%;
+  --accent-foreground: 145 63% 28%;
+
   --destructive: 0 84% 60%;
-  --destructive-foreground: 210 40% 98%;
+  --destructive-foreground: 0 0% 100%;
 
-  --border: 214 32% 91%;
-  --input: 214 32% 91%;
-  --ring: 214 52% 24%;
+  --border: 0 0% 90%;
+  --input: 0 0% 90%;
+  --ring: 145 63% 42%;
 
-  --sidebar: 214 52% 24%;
-  --sidebar-foreground: 210 40% 98%;
-  --sidebar-border: 214 52% 20%;
-  --sidebar-primary: 210 40% 98%;
-  --sidebar-primary-foreground: 214 52% 24%;
-  --sidebar-accent: 214 52% 30%;
-  --sidebar-accent-foreground: 210 40% 98%;
-  --sidebar-ring: 214 52% 24%;
+  --sidebar: 0 0% 7%;
+  --sidebar-foreground: 0 0% 98%;
+  --sidebar-border: 0 0% 14%;
+  --sidebar-primary: 145 63% 42%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 0 0% 14%;
+  --sidebar-accent-foreground: 0 0% 98%;
+  --sidebar-ring: 145 63% 42%;
 
   --app-font-sans: 'Inter', sans-serif;
   --app-font-serif: Georgia, serif;
@@ -107,35 +108,35 @@
 }
 
 .dark {
-  --background: 222 47% 11%;
-  --foreground: 210 40% 98%;
-  
-  --card: 222 47% 11%;
-  --card-foreground: 210 40% 98%;
-  --card-border: 217 32% 17%;
-  
-  --popover: 222 47% 11%;
-  --popover-foreground: 210 40% 98%;
-  --popover-border: 217 32% 17%;
-  
-  --primary: 214 52% 24%;
-  --primary-foreground: 210 40% 98%;
-  
-  --secondary: 217 32% 17%;
-  --secondary-foreground: 210 40% 98%;
-  
-  --muted: 217 32% 17%;
-  --muted-foreground: 215 20.2% 65.1%;
-  
-  --accent: 217 32% 17%;
-  --accent-foreground: 210 40% 98%;
-  
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 210 40% 98%;
+  --background: 0 0% 7%;
+  --foreground: 0 0% 98%;
 
-  --border: 217 32% 17%;
-  --input: 217 32% 17%;
-  --ring: 214 52% 24%;
+  --card: 0 0% 10%;
+  --card-foreground: 0 0% 98%;
+  --card-border: 0 0% 18%;
+
+  --popover: 0 0% 10%;
+  --popover-foreground: 0 0% 98%;
+  --popover-border: 0 0% 18%;
+
+  --primary: 145 63% 42%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 0 0% 14%;
+  --secondary-foreground: 0 0% 98%;
+
+  --muted: 0 0% 14%;
+  --muted-foreground: 0 0% 65%;
+
+  --accent: 0 0% 14%;
+  --accent-foreground: 0 0% 98%;
+
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+
+  --border: 0 0% 18%;
+  --input: 0 0% 18%;
+  --ring: 145 63% 42%;
 }
 
 @layer base {
