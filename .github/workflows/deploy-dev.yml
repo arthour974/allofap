@@ -1,23 +1,34 @@
-# Déploiement DEV uniquement — branche develop
+# Déploiement DEV — branche develop
+# Déclenché après push sur develop : la CI doit réussir, puis ce workflow déploie.
 # Secrets/variables : environnement GitHub "development"
 
 name: Deploy DEV
 
 on:
-  push:
-    branches:
-      - develop
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [develop]
   workflow_dispatch:
 
 permissions:
   id-token: write
   contents: read
+  actions: read
 
 jobs:
   deploy:
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event_name == 'workflow_run' &&
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push'
+      )
     uses: ./.github/workflows/deploy-aws.yml
     with:
       env_name: dev
       github_environment: development
+      git_ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || '' }}
     secrets:
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
