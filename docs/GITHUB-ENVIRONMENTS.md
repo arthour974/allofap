@@ -39,7 +39,7 @@ Repo : **https://github.com/arthour974/allofap**
 
 > **`TF_BACKEND_REGION`** : région du bucket S3 de state et de la table DynamoDB (bootstrap Oregon). **`AWS_REGION`** : région des ressources applicatives (Paris).
 
-Déploiement : push sur **`develop`** ou Actions → **Deploy DEV**.
+Déploiement : push sur **`develop`** → CI → **Deploy DEV** (automatique si CI OK), ou Actions → **Deploy DEV** (manuel).
 
 ### 2. Environnement `production`
 
@@ -53,7 +53,7 @@ Déploiement : push sur **`develop`** ou Actions → **Deploy DEV**.
 
 **Recommandé** : cocher **Required reviewers** (1 personne) avant déploiement prod.
 
-Déploiement : push sur **`main`** ou Actions → **Deploy PROD**.
+Déploiement : merge vers **`main`** (ou push) → CI → **Deploy PROD** (automatique si CI OK), ou Actions → **Deploy PROD** (manuel).
 
 > Les noms `AWS_ROLE_ARN`, `TF_STATE_BUCKET`, etc. sont **identiques** dans les deux environnements GitHub, mais les **valeurs** sont différentes (surtout `AWS_ROLE_ARN`).
 
@@ -64,8 +64,8 @@ Déploiement : push sur **`main`** ou Actions → **Deploy PROD**.
 | Fichier | Déclencheur | Cible |
 |---------|-------------|--------|
 | `ci.yml` | PR / push `develop` & `main` | Tests + validate Terraform dev & prod |
-| `deploy-dev.yml` | `develop` | DEV uniquement |
-| `deploy-prod.yml` | `main` | PROD uniquement |
+| `deploy-dev.yml` | CI réussie sur `develop` (push) + manuel | DEV uniquement |
+| `deploy-prod.yml` | CI réussie sur `main` (push, ex. merge PR) + manuel | PROD uniquement |
 | `deploy-aws.yml` | *(interne)* | Logique commune |
 
 **Impossible** de déployer la prod depuis `develop` : workflows séparés + rôles IAM limités par branche.
@@ -99,9 +99,11 @@ terraform output github_actions_role_arn
 ## Flux de promotion
 
 ```
-feature/* → PR → develop → Deploy DEV → recette
-                    ↓ merge
-                  main → Deploy PROD (avec approbation)
+feature/* → PR → develop → CI → Deploy DEV → recette
+                    ↓ PR merge
+                  main → CI → Deploy PROD (approbation env. production si configurée)
 ```
+
+> Les workflows **Deploy DEV/PROD** ne partent plus directement sur `push` : ils attendent la fin réussie du workflow **CI** sur la même branche, pour éviter un déploiement sans tests et pour fiabiliser le deploy après merge PR.
 
 Ne jamais utiliser l’URL Neon dev en prod ni l’inverse.

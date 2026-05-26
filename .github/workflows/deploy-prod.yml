@@ -1,24 +1,36 @@
-# Déploiement PROD uniquement — branche main
+# Déploiement PROD — branche main
+# Déclenché après merge develop → main : la CI sur main doit réussir, puis ce workflow déploie.
 # Secrets/variables : environnement GitHub "production"
-# Recommandé : activer "Required reviewers" sur l'environnement production
 
 name: Deploy PROD
 
 on:
-  push:
-    branches:
-      - main
+  # Après merge d'une PR vers main (push sur main → CI → deploy si CI OK)
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   id-token: write
   contents: read
+  actions: read
 
 jobs:
   deploy:
+    # Ne pas déployer sur échec CI ni sur CI d'une PR (seulement push main post-merge)
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event_name == 'workflow_run' &&
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push'
+      )
     uses: ./.github/workflows/deploy-aws.yml
     with:
       env_name: prod
       github_environment: production
+      git_ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || '' }}
     secrets:
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
