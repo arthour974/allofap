@@ -62,7 +62,7 @@ export default function Kanban() {
                             </div>
                             <div className="flex items-center gap-2">
                               <Car className="w-4 h-4 shrink-0 text-slate-400" />
-                              <span className="font-medium">{intervention.vehicule.immatriculation}</span>
+                              <span className="font-medium">{intervention.vehicule?.immatriculation ?? "—"}</span>
                             </div>
                           </div>
 

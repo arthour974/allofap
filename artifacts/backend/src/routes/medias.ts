@@ -3,6 +3,7 @@ import { db, mediasTable, interventionsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { AjouterMediaBody } from "@workspace/api-zod";
 import { deleteStoredMedia, uploadInterventionMedia } from "../lib/media-storage.js";
+import { normalizeMediaMimeType } from "../lib/media-mime.js";
 
 const router: IRouter = Router();
 
@@ -48,6 +49,15 @@ router.post("/interventions/:id/medias", async (req, res) => {
 
   const { typeMedia, nomFichier, mimeType, dataBase64 } = body.data;
 
+  const normalizedMime = normalizeMediaMimeType(mimeType, nomFichier);
+  if (!normalizedMime) {
+    res.status(400).json({
+      error: "INVALID_FILE_TYPE",
+      message: "Format non supporté. Utilisez PNG, JPG ou JPEG (ou MP4/WebM pour les vidéos).",
+    });
+    return;
+  }
+
   let buffer: Buffer;
   try {
     const base64Data = dataBase64.replace(/^data:[^;]+;base64,/, "");
@@ -63,7 +73,7 @@ router.post("/interventions/:id/medias", async (req, res) => {
   }
 
   try {
-    const { url } = await uploadInterventionMedia(id, buffer, nomFichier, mimeType);
+    const { url } = await uploadInterventionMedia(id, buffer, nomFichier, normalizedMime);
 
     const [media] = await db
       .insert(mediasTable)
@@ -72,7 +82,7 @@ router.post("/interventions/:id/medias", async (req, res) => {
         typeMedia,
         url,
         nomFichier,
-        mimeType,
+        mimeType: normalizedMime,
         tailleFichier: buffer.length,
       })
       .returning();

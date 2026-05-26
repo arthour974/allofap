@@ -10,6 +10,11 @@ import {
 } from "@workspace/api-zod";
 import { verifyShopifyWebhook } from "../lib/shopify-webhook";
 import { deleteInterventionById } from "../lib/delete-intervention.js";
+import { isNotNullViolation } from "../lib/db-errors.js";
+import { getInterventionFull } from "../lib/get-intervention-full.js";
+import { buildRapportHtml } from "../lib/rapport-html.js";
+import { isDossierTermine, isWizardStatut, wizardDateFieldForStatut } from "../lib/wizard.js";
+import { ensureInterventionShareToken, newShareToken } from "../lib/share-token.js";
 
 const router: IRouter = Router();
 
@@ -36,55 +41,6 @@ async function generateNumeroDossier(): Promise<string> {
     .where(sql`numero_dossier LIKE ${prefix + "%"}`);
   const num = Number(result[0]?.count ?? 0) + 1;
   return `${prefix}${String(num).padStart(5, "0")}`;
-}
-
-async function getInterventionFull(id: number) {
-  const rows = await db
-    .select({
-      intervention: interventionsTable,
-      client: clientsTable,
-      vehicule: vehiculesTable,
-    })
-    .from(interventionsTable)
-    .leftJoin(clientsTable, eq(interventionsTable.clientId, clientsTable.id))
-    .leftJoin(vehiculesTable, eq(interventionsTable.vehiculeId, vehiculesTable.id))
-    .where(eq(interventionsTable.id, id));
-
-  if (!rows[0]) return null;
-
-  const medias = await db.select().from(mediasTable)
-    .where(eq(mediasTable.interventionId, id))
-    .orderBy(mediasTable.createdAt);
-
-  const { intervention, client, vehicule } = rows[0];
-
-  const poidEntree = intervention.poidsEntreeG ? parseFloat(String(intervention.poidsEntreeG)) : null;
-  const poidsSortie = intervention.poidsSortieG ? parseFloat(String(intervention.poidsSortieG)) : null;
-  const pressionEntree = intervention.pressionEntreeMbar ? parseFloat(String(intervention.pressionEntreeMbar)) : null;
-  const pressionSortie = intervention.pressionSortieMbar ? parseFloat(String(intervention.pressionSortieMbar)) : null;
-
-  let alerte: string | null = null;
-  if (intervention.diagnosticCeramique === "FONDU") {
-    alerte = "Nettoyage impossible : céramique fondue. Intervention à refuser ou à clôturer comme non nettoyable.";
-  }
-
-  return {
-    ...intervention,
-    dateCreation: intervention.dateCreation ?? intervention.createdAt,
-    updatedAt: intervention.updatedAt ?? intervention.createdAt,
-    poidsEntreeG: poidEntree,
-    poidsSortieG: poidsSortie,
-    pressionEntreeMbar: pressionEntree,
-    pressionSortieMbar: pressionSortie,
-    masseExtraiteg: intervention.masseExtraiteG ? parseFloat(String(intervention.masseExtraiteG)) : null,
-    efficacitePrensionPourcent: intervention.efficacitePrensionPourcent
-      ? parseFloat(String(intervention.efficacitePrensionPourcent))
-      : null,
-    alerte,
-    client,
-    vehicule,
-    medias,
-  };
 }
 
 router.get("/interventions", async (req, res) => {
@@ -188,29 +144,46 @@ router.post("/interventions", async (req, res) => {
     vehiculeId = vehicle.id;
   }
 
-  if (!clientId || !vehiculeId) {
-    res.status(400).json({ error: "BAD_REQUEST", message: "Client et véhicule obligatoires" });
+  if (!clientId) {
+    res.status(400).json({ error: "BAD_REQUEST", message: "Client obligatoire" });
     return;
   }
 
   const numeroDossier = await generateNumeroDossier();
+  const statut = vehiculeId ? "CLIENT_VEHICULE" : "CREATION";
+  const shareToken = newShareToken();
 
-  const [intervention] = await db.insert(interventionsTable).values({
-    numeroDossier,
-    clientId,
-    vehiculeId,
-    statut: "CREATION",
-  }).returning();
+  try {
+    const [intervention] = await db.insert(interventionsTable).values({
+      numeroDossier,
+      clientId,
+      vehiculeId: vehiculeId ?? null,
+      statut,
+      shareToken,
+      shareTokenCreatedAt: new Date(),
+      ...(vehiculeId ? { dateClientVehicule: new Date() } : {}),
+    }).returning();
 
-  await db.insert(historiqueTable).values({
-    interventionId: intervention.id,
-    ancienStatut: null,
-    nouveauStatut: "CREATION",
-    utilisateur: "système",
-  });
+    await db.insert(historiqueTable).values({
+      interventionId: intervention.id,
+      ancienStatut: null,
+      nouveauStatut: "CREATION",
+      utilisateur: "système",
+    });
 
-  const full = await getInterventionFull(intervention.id);
-  res.status(201).json(full);
+    const full = await getInterventionFull(intervention.id);
+    res.status(201).json(full);
+  } catch (err) {
+    if (isNotNullViolation(err) && !vehiculeId) {
+      res.status(503).json({
+        error: "SCHEMA_OUTDATED",
+        message:
+          "La base de données n'autorise pas encore un dossier sans véhicule. Exécutez : pnpm --filter @workspace/db migrate:wizard",
+      });
+      return;
+    }
+    throw err;
+  }
 });
 
 router.post("/interventions/supprimer-en-masse", async (req, res) => {
@@ -275,12 +248,49 @@ router.put("/interventions/:id", async (req, res) => {
     return;
   }
 
-  if (existing[0].statut === "CLOTURE") {
-    res.status(403).json({ error: "FORBIDDEN", message: "Le dossier est clôturé et ne peut plus être modifié" });
-    return;
+  const { statut: newStatut, vehiculeId: newVehiculeId, clientId: newClientId, ...fieldUpdates } = body.data;
+  const updateData: Record<string, unknown> = { ...fieldUpdates, updatedAt: new Date() };
+
+  if (newClientId !== undefined && newClientId !== null && newClientId !== existing[0].clientId) {
+    const [clientRow] = await db.select({ id: clientsTable.id }).from(clientsTable).where(eq(clientsTable.id, newClientId)).limit(1);
+    if (!clientRow) {
+      res.status(404).json({ error: "NOT_FOUND", message: "Client introuvable" });
+      return;
+    }
+    updateData.clientId = newClientId;
+    if (existing[0].vehiculeId) {
+      const [vehiculeRow] = await db
+        .select({ clientId: vehiculesTable.clientId })
+        .from(vehiculesTable)
+        .where(eq(vehiculesTable.id, existing[0].vehiculeId))
+        .limit(1);
+      if (vehiculeRow && vehiculeRow.clientId !== newClientId) {
+        updateData.vehiculeId = null;
+      }
+    }
   }
 
-  const updateData: Record<string, unknown> = { ...body.data, updatedAt: new Date() };
+  if (newVehiculeId !== undefined && newVehiculeId !== null) {
+    updateData.vehiculeId = newVehiculeId;
+  }
+
+  if (newStatut !== undefined && newStatut !== null && newStatut !== existing[0].statut) {
+    if (!isWizardStatut(newStatut)) {
+      res.status(400).json({ error: "VALIDATION_ERROR", message: "Statut invalide pour le stepper" });
+      return;
+    }
+    updateData.statut = newStatut;
+    const dateField = wizardDateFieldForStatut(newStatut);
+    if (dateField) {
+      updateData[dateField] = new Date();
+    }
+    await db.insert(historiqueTable).values({
+      interventionId: id,
+      ancienStatut: existing[0].statut,
+      nouveauStatut: newStatut,
+      utilisateur: "utilisateur",
+    });
+  }
 
   if (body.data.poidsEntreeG !== undefined || body.data.poidsSortieG !== undefined) {
     const poidsEntree = body.data.poidsEntreeG ?? (existing[0].poidsEntreeG ? parseFloat(String(existing[0].poidsEntreeG)) : null);
@@ -308,6 +318,41 @@ router.put("/interventions/:id", async (req, res) => {
 
   const full = await getInterventionFull(updated.id);
   res.json(full);
+});
+
+router.post("/interventions/:id/partage", async (req, res) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "BAD_REQUEST", message: "ID invalide" });
+    return;
+  }
+
+  const existing = await db.select().from(interventionsTable).where(eq(interventionsTable.id, id)).limit(1);
+  if (!existing[0]) {
+    res.status(404).json({ error: "NOT_FOUND", message: "Intervention introuvable" });
+    return;
+  }
+
+  const regenerate = req.query.regenerate === "true";
+  let shareToken: string;
+
+  if (regenerate) {
+    shareToken = newShareToken();
+    await db
+      .update(interventionsTable)
+      .set({ shareToken, shareTokenCreatedAt: new Date(), updatedAt: new Date() })
+      .where(eq(interventionsTable.id, id));
+  } else {
+    shareToken = await ensureInterventionShareToken(id);
+  }
+
+  res.json({
+    shareToken,
+    shareUrl: `/partage/${shareToken}`,
+    message: regenerate
+      ? "Nouveau lien de suivi client créé. L'ancien lien ne fonctionne plus."
+      : "Lien de suivi client prêt. Transmettez-le au client pour suivre l'avancement du dossier.",
+  });
 });
 
 router.delete("/interventions/:id", async (req, res) => {
@@ -525,106 +570,7 @@ router.get("/interventions/:id/rapport-pdf/download", async (req, res) => {
     return;
   }
 
-  const STATUT_LABELS: Record<string, string> = {
-    CREATION: "Création", CLIENT_VEHICULE: "Client & Véhicule", CONTROLE_INITIAL: "Contrôle Initial",
-    VALIDATION_RECEPTION: "Validation Réception", ATELIER_ENTREE: "Entrée Atelier", NETTOYAGE: "Nettoyage",
-    SECHAGE: "Séchage", CONTROLE_FINAL: "Contrôle Final", RESTITUTION: "Restitution", CLOTURE: "Clôturé",
-  };
-  const RESULTAT_LABELS: Record<string, string> = {
-    NETTOYE: "Nettoyé avec succès", PARTIELLEMENT_NETTOYE: "Partiellement nettoyé", NON_NETTOYABLE: "Non nettoyable",
-  };
-  const DIAG_LABELS: Record<string, string> = {
-    OK: "OK", SONDE_CASSEE: "Sonde cassée", TUBES_HS: "Tubes HS", GRIPPE: "Grippé", AUTRE: "Autre",
-    SAIN: "Sain", FISSURE: "Fissuré", FONDU: "Fondu", HUILE: "Plein d'huile", COLMATE: "Colmaté",
-  };
-  const d = new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
-  const masseExtraite = full.poidsEntreeG && full.poidsSortieG ? (Number(full.poidsEntreeG) - Number(full.poidsSortieG)).toFixed(0) + " g" : "-";
-  const efficacite = full.pressionEntreeMbar && full.pressionSortieMbar
-    ? (((Number(full.pressionEntreeMbar) - Number(full.pressionSortieMbar)) / Number(full.pressionEntreeMbar)) * 100).toFixed(1) + " %"
-    : "-";
-
-  const preconisations = [];
-  if (full.preconisationCapteurPression) preconisations.push("Capteur de pression différentielle");
-  if (full.preconisationEgr) preconisations.push("Vanne EGR");
-  if (full.preconisationRegenerationAutoroute) preconisations.push("Régénération sur autoroute");
-  if (full.preconisationControlInjecteurs) preconisations.push("Contrôle injecteurs");
-  if (full.preconisationControlTurbo) preconisations.push("Contrôle turbo");
-  if (full.preconisationControlConsommationHuile) preconisations.push("Contrôle consommation d'huile");
-
-  const html = `<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8"/>
-<title>Rapport FAP — ${full.numeroDossier}</title>
-<style>
-  body { font-family: Arial, sans-serif; color: #1e293b; margin: 0; padding: 40px; max-width: 800px; margin: 0 auto; }
-  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; border-bottom: 3px solid #1e3a5f; padding-bottom: 20px; }
-  .logo { font-size: 28px; font-weight: 900; color: #1e3a5f; }
-  .logo span { color: #3b82f6; }
-  .ref { text-align: right; font-size: 13px; color: #64748b; }
-  .ref strong { font-size: 18px; color: #1e293b; display: block; }
-  h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #1e3a5f; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; margin-top: 28px; }
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; margin-top: 12px; }
-  .field label { font-size: 11px; color: #64748b; text-transform: uppercase; }
-  .field p { margin: 2px 0 0; font-size: 14px; font-weight: 600; }
-  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 12px; }
-  .metric { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; text-align: center; }
-  .metric .val { font-size: 22px; font-weight: 800; color: #1e3a5f; }
-  .metric .lbl { font-size: 11px; color: #64748b; margin-top: 4px; }
-  .badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 13px; font-weight: 700; }
-  .badge-green { background: #dcfce7; color: #166534; }
-  .badge-orange { background: #fed7aa; color: #9a3412; }
-  .badge-red { background: #fee2e2; color: #991b1b; }
-  .preco li { font-size: 13px; margin: 4px 0; }
-  .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 11px; color: #94a3b8; text-align: center; }
-  @media print { body { padding: 20px; } }
-</style>
-</head>
-<body>
-<div class="header">
-  <div class="logo">FAP<span>Expert</span><div style="font-size:12px;font-weight:400;color:#64748b;margin-top:4px;">Rapport de nettoyage de filtre à particules</div></div>
-  <div class="ref"><strong>${full.numeroDossier}</strong>Édité le ${d}</div>
-</div>
-
-<h2>Informations Client & Véhicule</h2>
-<div class="grid">
-  <div class="field"><label>Client</label><p>${full.client?.nomClient || "-"}</p></div>
-  <div class="field"><label>Téléphone</label><p>${full.client?.telephone || "-"}</p></div>
-  <div class="field"><label>Immatriculation</label><p>${full.vehicule?.immatriculation || "-"}</p></div>
-  <div class="field"><label>Marque & Modèle</label><p>${full.vehicule?.marque || "-"} ${full.vehicule?.modele || ""}</p></div>
-  <div class="field"><label>VIN</label><p>${full.vehicule?.vin || "-"}</p></div>
-  <div class="field"><label>Motorisation</label><p>${full.vehicule?.motorisation || "-"}</p></div>
-  <div class="field"><label>Kilométrage</label><p>${full.vehicule?.kilometrage ? full.vehicule.kilometrage + " km" : "-"}</p></div>
-  <div class="field"><label>Statut final</label><p><span class="badge badge-${full.statut === "CLOTURE" ? "green" : "orange"}">${STATUT_LABELS[full.statut] || full.statut}</span></p></div>
-</div>
-
-<h2>Contrôle Initial</h2>
-<div class="grid">
-  <div class="field"><label>Poids à l'entrée</label><p>${full.poidsEntreeG ? full.poidsEntreeG + " g" : "-"}</p></div>
-  <div class="field"><label>Pression à l'entrée</label><p>${full.pressionEntreeMbar ? full.pressionEntreeMbar + " mbar" : "-"}</p></div>
-  <div class="field"><label>Diagnostic accessoires</label><p>${DIAG_LABELS[full.diagnosticAccessoires || ""] || full.diagnosticAccessoires || "-"}</p></div>
-  <div class="field"><label>Diagnostic céramique</label><p>${DIAG_LABELS[full.diagnosticCeramique || ""] || full.diagnosticCeramique || "-"}</p></div>
-</div>
-
-<h2>Résultats de Nettoyage</h2>
-<div class="metrics">
-  <div class="metric"><div class="val">${full.poidsEntreeG ? full.poidsEntreeG + " g" : "-"}</div><div class="lbl">Poids entrée</div></div>
-  <div class="metric"><div class="val">${full.poidsSortieG ? full.poidsSortieG + " g" : "-"}</div><div class="lbl">Poids sortie</div></div>
-  <div class="metric"><div class="val">${masseExtraite}</div><div class="lbl">Masse extraite</div></div>
-  <div class="metric"><div class="val">${efficacite}</div><div class="lbl">Efficacité</div></div>
-</div>
-<div class="grid" style="margin-top:16px;">
-  <div class="field"><label>Pression à la sortie</label><p>${full.pressionSortieMbar ? full.pressionSortieMbar + " mbar" : "-"}</p></div>
-  <div class="field"><label>Résultat final</label><p><span class="badge ${full.resultatFinal === "NETTOYE" ? "badge-green" : full.resultatFinal === "PARTIELLEMENT_NETTOYE" ? "badge-orange" : "badge-red"}">${RESULTAT_LABELS[full.resultatFinal || ""] || full.resultatFinal || "Non renseigné"}</span></p></div>
-</div>
-${full.observationAtelier ? `<div style="margin-top:12px;padding:12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;font-size:13px;"><strong>Observations atelier :</strong> ${full.observationAtelier}</div>` : ""}
-
-${preconisations.length > 0 ? `<h2>Préconisations</h2><ul class="preco">${preconisations.map(p => `<li>✓ ${p}</li>`).join("")}</ul>` : ""}
-
-<div class="footer">FAP Expert — Rapport généré le ${d} — ${full.numeroDossier}<br/>Ce document est un rapport technique de nettoyage de filtre à particules.</div>
-<script>window.onload = () => window.print();</script>
-</body></html>`;
-
+  const html = buildRapportHtml(full);
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.setHeader("Content-Disposition", `inline; filename="rapport-${full.numeroDossier}.html"`);
   res.send(html);

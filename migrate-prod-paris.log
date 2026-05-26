@@ -1,0 +1,1183 @@
+=== Migration prod → Paris 2026-05-21T15:53:52Z ===
+→ State rm (ressources régionales)
+Acquiring state lock. This may take a few moments...
+Removed module.api.aws_security_group.alb
+Successfully removed 1 resource instance(s).
+Releasing state lock. This may take a few moments...
+Acquiring state lock. This may take a few moments...
+Removed module.api.aws_security_group.ecs
+Successfully removed 1 resource instance(s).
+Releasing state lock. This may take a few moments...
+Acquiring state lock. This may take a few moments...
+Removed module.api.aws_ssm_parameter.database_url
+Successfully removed 1 resource instance(s).
+Releasing state lock. This may take a few moments...
+Acquiring state lock. This may take a few moments...
+Removed module.api.aws_ssm_parameter.session_secret
+Successfully removed 1 resource instance(s).
+Releasing state lock. This may take a few moments...
+Acquiring state lock. This may take a few moments...
+Removed module.api.aws_ssm_parameter.shopify_webhook_secret
+Successfully removed 1 resource instance(s).
+Releasing state lock. This may take a few moments...
+Acquiring state lock. This may take a few moments...
+Removed module.frontend.data.aws_iam_policy_document.s3_policy
+Successfully removed 1 resource instance(s).
+Releasing state lock. This may take a few moments...
+Acquiring state lock. This may take a few moments...
+Removed module.frontend.aws_cloudfront_distribution.frontend
+Successfully removed 1 resource instance(s).
+Releasing state lock. This may take a few moments...
+Acquiring state lock. This may take a few moments...
+Removed module.frontend.aws_cloudfront_origin_access_control.frontend
+Successfully removed 1 resource instance(s).
+Releasing state lock. This may take a few moments...
+Acquiring state lock. This may take a few moments...
+Removed module.frontend.aws_s3_bucket.frontend
+Successfully removed 1 resource instance(s).
+Releasing state lock. This may take a few moments...
+Acquiring state lock. This may take a few moments...
+Removed module.frontend.aws_s3_bucket_policy.frontend
+Successfully removed 1 resource instance(s).
+Releasing state lock. This may take a few moments...
+Acquiring state lock. This may take a few moments...
+Removed module.frontend.aws_s3_bucket_public_access_block.frontend
+Successfully removed 1 resource instance(s).
+Releasing state lock. This may take a few moments...
+Acquiring state lock. This may take a few moments...
+Removed module.frontend.aws_s3_bucket_versioning.frontend
+Successfully removed 1 resource instance(s).
+Releasing state lock. This may take a few moments...
+→ Sauvegarde secrets SSM (us-west-2)
+→ Vidage bucket Oregon allofap-prod-frontend
+delete: s3://allofap-prod-frontend/assets/index-Cw0j9t9z.css
+delete: s3://allofap-prod-frontend/favicon.svg
+delete: s3://allofap-prod-frontend/index.html
+delete: s3://allofap-prod-frontend/assets/index-Bw6-VacX.js
+→ Terraform apply (eu-west-3)
+Acquiring state lock. This may take a few moments...
+[0m[1mmodule.api.data.aws_vpc.default: Reading...[0m[0m
+[0m[1mmodule.api.data.aws_iam_policy_document.ecs_execution_kms: Reading...[0m[0m
+[0m[1mmodule.github_oidc.data.aws_caller_identity.current: Reading...[0m[0m
+[0m[1mmodule.api.data.aws_iam_policy_document.ecs_task_s3_media[0]: Reading...[0m[0m
+[0m[1mmodule.api.data.aws_iam_policy_document.ecs_task_s3_media[0]: Read complete after 0s [id=3803706582][0m
+[0m[1mmodule.api.data.aws_iam_policy_document.ecs_execution_kms: Read complete after 0s [id=2827995459][0m
+[0m[1mmodule.github_oidc.data.aws_iam_openid_connect_provider.github: Reading...[0m[0m
+[0m[1mmodule.api.data.aws_caller_identity.current: Reading...[0m[0m
+[0m[1mmodule.github_oidc.data.aws_caller_identity.current: Read complete after 0s [id=503789396714][0m
+[0m[1mmodule.github_oidc.data.aws_iam_policy_document.deploy: Reading...[0m[0m
+[0m[1mmodule.github_oidc.data.aws_iam_policy_document.deploy: Read complete after 0s [id=1820580692][0m
+[0m[1mmodule.api.data.aws_caller_identity.current: Read complete after 0s [id=503789396714][0m
+[0m[1mmodule.api.data.aws_iam_policy_document.ecs_execution_ssm: Reading...[0m[0m
+[0m[1mmodule.api.data.aws_iam_policy_document.ecs_execution_ssm: Read complete after 0s [id=1953422998][0m
+[0m[1mmodule.github_oidc.data.aws_iam_openid_connect_provider.github: Read complete after 2s [id=arn:aws:iam::503789396714:oidc-provider/token.actions.githubusercontent.com][0m
+[0m[1mmodule.github_oidc.data.aws_iam_policy_document.github_assume_role: Reading...[0m[0m
+[0m[1mmodule.github_oidc.data.aws_iam_policy_document.github_assume_role: Read complete after 0s [id=114351392][0m
+[0m[1mmodule.github_oidc.aws_iam_role.github_actions: Refreshing state... [id=allofap-prod-github-actions][0m
+[0m[1mmodule.api.data.aws_vpc.default: Read complete after 2s [id=vpc-07ec2212fdebdd044][0m
+[0m[1mmodule.api.data.aws_subnets.default: Reading...[0m[0m
+[0m[1mmodule.api.data.aws_subnets.default: Read complete after 0s [id=eu-west-3][0m
+[0m[1mmodule.github_oidc.aws_iam_role_policy.deploy: Refreshing state... [id=allofap-prod-github-actions:deploy][0m
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  [32m+[0m create[0m
+ [36m<=[0m read (data resources)[0m
+
+Terraform will perform the following actions:
+
+[1m  # module.api.aws_cloudwatch_log_group.api[0m will be created
+[0m  [32m+[0m[0m resource "aws_cloudwatch_log_group" "api" {
+      [32m+[0m[0m arn               = (known after apply)
+      [32m+[0m[0m id                = (known after apply)
+      [32m+[0m[0m log_group_class   = (known after apply)
+      [32m+[0m[0m name              = "/ecs/allofap-prod-api"
+      [32m+[0m[0m name_prefix       = (known after apply)
+      [32m+[0m[0m retention_in_days = 30
+      [32m+[0m[0m skip_destroy      = false
+      [32m+[0m[0m tags_all          = {
+          [32m+[0m[0m "Environment" = "prod"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Project"     = "allofap"
+        }
+    }
+
+[1m  # module.api.aws_ecr_lifecycle_policy.api[0m will be created
+[0m  [32m+[0m[0m resource "aws_ecr_lifecycle_policy" "api" {
+      [32m+[0m[0m id          = (known after apply)
+      [32m+[0m[0m policy      = jsonencode(
+            {
+              [32m+[0m[0m rules = [
+                  [32m+[0m[0m {
+                      [32m+[0m[0m action       = {
+                          [32m+[0m[0m type = "expire"
+                        }
+                      [32m+[0m[0m description  = "Keep last 20 images"
+                      [32m+[0m[0m rulePriority = 1
+                      [32m+[0m[0m selection    = {
+                          [32m+[0m[0m countNumber = 20
+                          [32m+[0m[0m countType   = "imageCountMoreThan"
+                          [32m+[0m[0m tagStatus   = "any"
+                        }
+                    },
+                ]
+            }
+        )
+      [32m+[0m[0m registry_id = (known after apply)
+      [32m+[0m[0m repository  = "allofap-prod-api"
+    }
+
+[1m  # module.api.aws_ecr_repository.api[0m will be created
+[0m  [32m+[0m[0m resource "aws_ecr_repository" "api" {
+      [32m+[0m[0m arn                  = (known after apply)
+      [32m+[0m[0m force_delete         = false
+      [32m+[0m[0m id                   = (known after apply)
+      [32m+[0m[0m image_tag_mutability = "MUTABLE"
+      [32m+[0m[0m name                 = "allofap-prod-api"
+      [32m+[0m[0m registry_id          = (known after apply)
+      [32m+[0m[0m repository_url       = (known after apply)
+      [32m+[0m[0m tags_all             = {
+          [32m+[0m[0m "Environment" = "prod"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Project"     = "allofap"
+        }
+
+      [32m+[0m[0m image_scanning_configuration {
+          [32m+[0m[0m scan_on_push = true
+        }
+    }
+
+[1m  # module.api.aws_ecs_cluster.api[0m will be created
+[0m  [32m+[0m[0m resource "aws_ecs_cluster" "api" {
+      [32m+[0m[0m arn      = (known after apply)
+      [32m+[0m[0m id       = (known after apply)
+      [32m+[0m[0m name     = "allofap-prod"
+      [32m+[0m[0m tags_all = {
+          [32m+[0m[0m "Environment" = "prod"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Project"     = "allofap"
+        }
+
+      [32m+[0m[0m setting {
+          [32m+[0m[0m name  = "containerInsights"
+          [32m+[0m[0m value = "enabled"
+        }
+    }
+
+[1m  # module.api.aws_ecs_service.api[0m will be created
+[0m  [32m+[0m[0m resource "aws_ecs_service" "api" {
+      [32m+[0m[0m availability_zone_rebalancing      = "DISABLED"
+      [32m+[0m[0m cluster                            = (known after apply)
+      [32m+[0m[0m deployment_maximum_percent         = 200
+      [32m+[0m[0m deployment_minimum_healthy_percent = 100
+      [32m+[0m[0m desired_count                      = 1
+      [32m+[0m[0m enable_ecs_managed_tags            = false
+      [32m+[0m[0m enable_execute_command             = false
+      [32m+[0m[0m iam_role                           = (known after apply)
+      [32m+[0m[0m id                                 = (known after apply)
+      [32m+[0m[0m launch_type                        = "FARGATE"
+      [32m+[0m[0m name                               = "allofap-prod-api"
+      [32m+[0m[0m platform_version                   = (known after apply)
+      [32m+[0m[0m scheduling_strategy                = "REPLICA"
+      [32m+[0m[0m tags_all                           = {
+          [32m+[0m[0m "Environment" = "prod"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Project"     = "allofap"
+        }
+      [32m+[0m[0m task_definition                    = (known after apply)
+      [32m+[0m[0m triggers                           = (known after apply)
+      [32m+[0m[0m wait_for_steady_state              = false
+
+      [32m+[0m[0m load_balancer {
+          [32m+[0m[0m container_name   = "api"
+          [32m+[0m[0m container_port   = 8080
+          [32m+[0m[0m target_group_arn = (known after apply)
+            [90m# (1 unchanged attribute hidden)[0m[0m
+        }
+
+      [32m+[0m[0m network_configuration {
+          [32m+[0m[0m assign_public_ip = true
+          [32m+[0m[0m security_groups  = (known after apply)
+          [32m+[0m[0m subnets          = [
+              [32m+[0m[0m "subnet-023ded71c8d811851",
+              [32m+[0m[0m "subnet-023f12a2cee3227b9",
+              [32m+[0m[0m "subnet-0699f3ce63be086ca",
+            ]
+        }
+    }
+
+[1m  # module.api.aws_ecs_task_definition.api[0m will be created
+[0m  [32m+[0m[0m resource "aws_ecs_task_definition" "api" {
+      [32m+[0m[0m arn                      = (known after apply)
+      [32m+[0m[0m arn_without_revision     = (known after apply)
+      [32m+[0m[0m container_definitions    = (known after apply)
+      [32m+[0m[0m cpu                      = "512"
+      [32m+[0m[0m enable_fault_injection   = (known after apply)
+      [32m+[0m[0m execution_role_arn       = (known after apply)
+      [32m+[0m[0m family                   = "allofap-prod-api"
+      [32m+[0m[0m id                       = (known after apply)
+      [32m+[0m[0m memory                   = "1024"
+      [32m+[0m[0m network_mode             = "awsvpc"
+      [32m+[0m[0m requires_compatibilities = [
+          [32m+[0m[0m "FARGATE",
+        ]
+      [32m+[0m[0m revision                 = (known after apply)
+      [32m+[0m[0m skip_destroy             = false
+      [32m+[0m[0m tags_all                 = {
+          [32m+[0m[0m "Environment" = "prod"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Project"     = "allofap"
+        }
+      [32m+[0m[0m task_role_arn            = (known after apply)
+      [32m+[0m[0m track_latest             = false
+    }
+
+[1m  # module.api.aws_iam_role.ecs_execution[0m will be created
+[0m  [32m+[0m[0m resource "aws_iam_role" "ecs_execution" {
+      [32m+[0m[0m arn                   = (known after apply)
+      [32m+[0m[0m assume_role_policy    = jsonencode(
+            {
+              [32m+[0m[0m Statement = [
+                  [32m+[0m[0m {
+                      [32m+[0m[0m Action    = "sts:AssumeRole"
+                      [32m+[0m[0m Effect    = "Allow"
+                      [32m+[0m[0m Principal = {
+                          [32m+[0m[0m Service = "ecs-tasks.amazonaws.com"
+                        }
+                    },
+                ]
+              [32m+[0m[0m Version   = "2012-10-17"
+            }
+        )
+      [32m+[0m[0m create_date           = (known after apply)
+      [32m+[0m[0m force_detach_policies = false
+      [32m+[0m[0m id                    = (known after apply)
+      [32m+[0m[0m managed_policy_arns   = (known after apply)
+      [32m+[0m[0m max_session_duration  = 3600
+      [32m+[0m[0m name                  = "allofap-prod-ecs-execution"
+      [32m+[0m[0m name_prefix           = (known after apply)
+      [32m+[0m[0m path                  = "/"
+      [32m+[0m[0m tags_all              = {
+          [32m+[0m[0m "Environment" = "prod"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Project"     = "allofap"
+        }
+      [32m+[0m[0m unique_id             = (known after apply)
+
+      [32m+[0m[0m inline_policy (known after apply)
+    }
+
+[1m  # module.api.aws_iam_role.ecs_task[0m will be created
+[0m  [32m+[0m[0m resource "aws_iam_role" "ecs_task" {
+      [32m+[0m[0m arn                   = (known after apply)
+      [32m+[0m[0m assume_role_policy    = jsonencode(
+            {
+              [32m+[0m[0m Statement = [
+                  [32m+[0m[0m {
+                      [32m+[0m[0m Action    = "sts:AssumeRole"
+                      [32m+[0m[0m Effect    = "Allow"
+                      [32m+[0m[0m Principal = {
+                          [32m+[0m[0m Service = "ecs-tasks.amazonaws.com"
+                        }
+                    },
+                ]
+              [32m+[0m[0m Version   = "2012-10-17"
+            }
+        )
+      [32m+[0m[0m create_date           = (known after apply)
+      [32m+[0m[0m force_detach_policies = false
+      [32m+[0m[0m id                    = (known after apply)
+      [32m+[0m[0m managed_policy_arns   = (known after apply)
+      [32m+[0m[0m max_session_duration  = 3600
+      [32m+[0m[0m name                  = "allofap-prod-ecs-task"
+      [32m+[0m[0m name_prefix           = (known after apply)
+      [32m+[0m[0m path                  = "/"
+      [32m+[0m[0m tags_all              = {
+          [32m+[0m[0m "Environment" = "prod"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Project"     = "allofap"
+        }
+      [32m+[0m[0m unique_id             = (known after apply)
+
+      [32m+[0m[0m inline_policy (known after apply)
+    }
+
+[1m  # module.api.aws_iam_role_policy.ecs_execution_kms[0m will be created
+[0m  [32m+[0m[0m resource "aws_iam_role_policy" "ecs_execution_kms" {
+      [32m+[0m[0m id          = (known after apply)
+      [32m+[0m[0m name        = "kms-ssm"
+      [32m+[0m[0m name_prefix = (known after apply)
+      [32m+[0m[0m policy      = jsonencode(
+            {
+              [32m+[0m[0m Statement = [
+                  [32m+[0m[0m {
+                      [32m+[0m[0m Action    = "kms:Decrypt"
+                      [32m+[0m[0m Condition = {
+                          [32m+[0m[0m StringEquals = {
+                              [32m+[0m[0m "kms:ViaService" = "ssm.eu-west-3.amazonaws.com"
+                            }
+                        }
+                      [32m+[0m[0m Effect    = "Allow"
+                      [32m+[0m[0m Resource  = "*"
+                    },
+                ]
+              [32m+[0m[0m Version   = "2012-10-17"
+            }
+        )
+      [32m+[0m[0m role        = (known after apply)
+    }
+
+[1m  # module.api.aws_iam_role_policy.ecs_execution_ssm[0m will be created
+[0m  [32m+[0m[0m resource "aws_iam_role_policy" "ecs_execution_ssm" {
+      [32m+[0m[0m id          = (known after apply)
+      [32m+[0m[0m name        = "ssm-secrets"
+      [32m+[0m[0m name_prefix = (known after apply)
+      [32m+[0m[0m policy      = jsonencode(
+            {
+              [32m+[0m[0m Statement = [
+                  [32m+[0m[0m {
+                      [32m+[0m[0m Action   = [
+                          [32m+[0m[0m "ssm:GetParameters",
+                          [32m+[0m[0m "ssm:GetParameter",
+                        ]
+                      [32m+[0m[0m Effect   = "Allow"
+                      [32m+[0m[0m Resource = "arn:aws:ssm:eu-west-3:503789396714:parameter/allofap/prod/*"
+                    },
+                ]
+              [32m+[0m[0m Version   = "2012-10-17"
+            }
+        )
+      [32m+[0m[0m role        = (known after apply)
+    }
+
+[1m  # module.api.aws_iam_role_policy.ecs_task_s3_media[0][0m will be created
+[0m  [32m+[0m[0m resource "aws_iam_role_policy" "ecs_task_s3_media" {
+      [32m+[0m[0m id          = (known after apply)
+      [32m+[0m[0m name        = "s3-medias"
+      [32m+[0m[0m name_prefix = (known after apply)
+      [32m+[0m[0m policy      = jsonencode(
+            {
+              [32m+[0m[0m Statement = [
+                  [32m+[0m[0m {
+                      [32m+[0m[0m Action   = [
+                          [32m+[0m[0m "s3:PutObject",
+                          [32m+[0m[0m "s3:ListBucket",
+                          [32m+[0m[0m "s3:GetObject",
+                          [32m+[0m[0m "s3:DeleteObject",
+                        ]
+                      [32m+[0m[0m Effect   = "Allow"
+                      [32m+[0m[0m Resource = [
+                          [32m+[0m[0m "arn:aws:s3:::allofap-prod-medias-euw3/interventions/*",
+                          [32m+[0m[0m "arn:aws:s3:::allofap-prod-medias-euw3",
+                        ]
+                    },
+                ]
+              [32m+[0m[0m Version   = "2012-10-17"
+            }
+        )
+      [32m+[0m[0m role        = (known after apply)
+    }
+
+[1m  # module.api.aws_iam_role_policy_attachment.ecs_execution[0m will be created
+[0m  [32m+[0m[0m resource "aws_iam_role_policy_attachment" "ecs_execution" {
+      [32m+[0m[0m id         = (known after apply)
+      [32m+[0m[0m policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+      [32m+[0m[0m role       = "allofap-prod-ecs-execution"
+    }
+
+[1m  # module.api.aws_lb.api[0m will be created
+[0m  [32m+[0m[0m resource "aws_lb" "api" {
+      [32m+[0m[0m arn                                                          = (known after apply)
+      [32m+[0m[0m arn_suffix                                                   = (known after apply)
+      [32m+[0m[0m client_keep_alive                                            = 3600
+      [32m+[0m[0m desync_mitigation_mode                                       = "defensive"
+      [32m+[0m[0m dns_name                                                     = (known after apply)
+      [32m+[0m[0m drop_invalid_header_fields                                   = false
+      [32m+[0m[0m enable_deletion_protection                                   = false
+      [32m+[0m[0m enable_http2                                                 = true
+      [32m+[0m[0m enable_tls_version_and_cipher_suite_headers                  = false
+      [32m+[0m[0m enable_waf_fail_open                                         = false
+      [32m+[0m[0m enable_xff_client_port                                       = false
+      [32m+[0m[0m enable_zonal_shift                                           = false
+      [32m+[0m[0m enforce_security_group_inbound_rules_on_private_link_traffic = (known after apply)
+      [32m+[0m[0m id                                                           = (known after apply)
+      [32m+[0m[0m idle_timeout                                                 = 60
+      [32m+[0m[0m internal                                                     = false
+      [32m+[0m[0m ip_address_type                                              = (known after apply)
+      [32m+[0m[0m load_balancer_type                                           = "application"
+      [32m+[0m[0m name                                                         = "allofap-prod-api"
+      [32m+[0m[0m name_prefix                                                  = (known after apply)
+      [32m+[0m[0m preserve_host_header                                         = false
+      [32m+[0m[0m security_groups                                              = (known after apply)
+      [32m+[0m[0m subnets                                                      = [
+          [32m+[0m[0m "subnet-023ded71c8d811851",
+          [32m+[0m[0m "subnet-023f12a2cee3227b9",
+          [32m+[0m[0m "subnet-0699f3ce63be086ca",
+        ]
+      [32m+[0m[0m tags_all                                                     = {
+          [32m+[0m[0m "Environment" = "prod"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Project"     = "allofap"
+        }
+      [32m+[0m[0m vpc_id                                                       = (known after apply)
+      [32m+[0m[0m xff_header_processing_mode                                   = "append"
+      [32m+[0m[0m zone_id                                                      = (known after apply)
+
+      [32m+[0m[0m subnet_mapping (known after apply)
+    }
+
+[1m  # module.api.aws_lb_listener.http[0m will be created
+[0m  [32m+[0m[0m resource "aws_lb_listener" "http" {
+      [32m+[0m[0m arn                                                                   = (known after apply)
+      [32m+[0m[0m id                                                                    = (known after apply)
+      [32m+[0m[0m load_balancer_arn                                                     = (known after apply)
+      [32m+[0m[0m port                                                                  = 80
+      [32m+[0m[0m protocol                                                              = "HTTP"
+      [32m+[0m[0m routing_http_request_x_amzn_mtls_clientcert_header_name               = (known after apply)
+      [32m+[0m[0m routing_http_request_x_amzn_mtls_clientcert_issuer_header_name        = (known after apply)
+      [32m+[0m[0m routing_http_request_x_amzn_mtls_clientcert_leaf_header_name          = (known after apply)
+      [32m+[0m[0m routing_http_request_x_amzn_mtls_clientcert_serial_number_header_name = (known after apply)
+      [32m+[0m[0m routing_http_request_x_amzn_mtls_clientcert_subject_header_name       = (known after apply)
+      [32m+[0m[0m routing_http_request_x_amzn_mtls_clientcert_validity_header_name      = (known after apply)
+      [32m+[0m[0m routing_http_request_x_amzn_tls_cipher_suite_header_name              = (known after apply)
+      [32m+[0m[0m routing_http_request_x_amzn_tls_version_header_name                   = (known after apply)
+      [32m+[0m[0m routing_http_response_access_control_allow_credentials_header_value   = (known after apply)
+      [32m+[0m[0m routing_http_response_access_control_allow_headers_header_value       = (known after apply)
+      [32m+[0m[0m routing_http_response_access_control_allow_methods_header_value       = (known after apply)
+      [32m+[0m[0m routing_http_response_access_control_allow_origin_header_value        = (known after apply)
+      [32m+[0m[0m routing_http_response_access_control_expose_headers_header_value      = (known after apply)
+      [32m+[0m[0m routing_http_response_access_control_max_age_header_value             = (known after apply)
+      [32m+[0m[0m routing_http_response_content_security_policy_header_value            = (known after apply)
+      [32m+[0m[0m routing_http_response_server_enabled                                  = (known after apply)
+      [32m+[0m[0m routing_http_response_strict_transport_security_header_value          = (known after apply)
+      [32m+[0m[0m routing_http_response_x_content_type_options_header_value             = (known after apply)
+      [32m+[0m[0m routing_http_response_x_frame_options_header_value                    = (known after apply)
+      [32m+[0m[0m ssl_policy                                                            = (known after apply)
+      [32m+[0m[0m tags_all                                                              = {
+          [32m+[0m[0m "Environment" = "prod"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Project"     = "allofap"
+        }
+      [32m+[0m[0m tcp_idle_timeout_seconds                                              = (known after apply)
+
+      [32m+[0m[0m default_action {
+          [32m+[0m[0m order            = (known after apply)
+          [32m+[0m[0m target_group_arn = (known after apply)
+          [32m+[0m[0m type             = "forward"
+        }
+
+      [32m+[0m[0m mutual_authentication (known after apply)
+    }
+
+[1m  # module.api.aws_lb_target_group.api[0m will be created
+[0m  [32m+[0m[0m resource "aws_lb_target_group" "api" {
+      [32m+[0m[0m arn                                = (known after apply)
+      [32m+[0m[0m arn_suffix                         = (known after apply)
+      [32m+[0m[0m connection_termination             = (known after apply)
+      [32m+[0m[0m deregistration_delay               = "300"
+      [32m+[0m[0m id                                 = (known after apply)
+      [32m+[0m[0m ip_address_type                    = (known after apply)
+      [32m+[0m[0m lambda_multi_value_headers_enabled = false
+      [32m+[0m[0m load_balancer_arns                 = (known after apply)
+      [32m+[0m[0m load_balancing_algorithm_type      = (known after apply)
+      [32m+[0m[0m load_balancing_anomaly_mitigation  = (known after apply)
+      [32m+[0m[0m load_balancing_cross_zone_enabled  = (known after apply)
+      [32m+[0m[0m name                               = "allofap-prod-api"
+      [32m+[0m[0m name_prefix                        = (known after apply)
+      [32m+[0m[0m port                               = 8080
+      [32m+[0m[0m preserve_client_ip                 = (known after apply)
+      [32m+[0m[0m protocol                           = "HTTP"
+      [32m+[0m[0m protocol_version                   = (known after apply)
+      [32m+[0m[0m proxy_protocol_v2                  = false
+      [32m+[0m[0m slow_start                         = 0
+      [32m+[0m[0m tags_all                           = {
+          [32m+[0m[0m "Environment" = "prod"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Project"     = "allofap"
+        }
+      [32m+[0m[0m target_type                        = "ip"
+      [32m+[0m[0m vpc_id                             = "vpc-07ec2212fdebdd044"
+
+      [32m+[0m[0m health_check {
+          [32m+[0m[0m enabled             = true
+          [32m+[0m[0m healthy_threshold   = 2
+          [32m+[0m[0m interval            = 30
+          [32m+[0m[0m matcher             = "200"
+          [32m+[0m[0m path                = "/api/healthz"
+          [32m+[0m[0m port                = "traffic-port"
+          [32m+[0m[0m protocol            = "HTTP"
+          [32m+[0m[0m timeout             = 5
+          [32m+[0m[0m unhealthy_threshold = 3
+        }
+
+      [32m+[0m[0m stickiness (known after apply)
+
+      [32m+[0m[0m target_failover (known after apply)
+
+      [32m+[0m[0m target_group_health (known after apply)
+
+      [32m+[0m[0m target_health_state (known after apply)
+    }
+
+[1m  # module.api.aws_security_group.alb[0m will be created
+[0m  [32m+[0m[0m resource "aws_security_group" "alb" {
+      [32m+[0m[0m arn                    = (known after apply)
+      [32m+[0m[0m description            = "ALB for API"
+      [32m+[0m[0m egress                 = [
+          [32m+[0m[0m {
+              [32m+[0m[0m cidr_blocks      = [
+                  [32m+[0m[0m "0.0.0.0/0",
+                ]
+              [32m+[0m[0m from_port        = 0
+              [32m+[0m[0m ipv6_cidr_blocks = []
+              [32m+[0m[0m prefix_list_ids  = []
+              [32m+[0m[0m protocol         = "-1"
+              [32m+[0m[0m security_groups  = []
+              [32m+[0m[0m self             = false
+              [32m+[0m[0m to_port          = 0
+                [90m# (1 unchanged attribute hidden)[0m[0m
+            },
+        ]
+      [32m+[0m[0m id                     = (known after apply)
+      [32m+[0m[0m ingress                = [
+          [32m+[0m[0m {
+              [32m+[0m[0m cidr_blocks      = [
+                  [32m+[0m[0m "0.0.0.0/0",
+                ]
+              [32m+[0m[0m from_port        = 80
+              [32m+[0m[0m ipv6_cidr_blocks = []
+              [32m+[0m[0m prefix_list_ids  = []
+              [32m+[0m[0m protocol         = "tcp"
+              [32m+[0m[0m security_groups  = []
+              [32m+[0m[0m self             = false
+              [32m+[0m[0m to_port          = 80
+                [90m# (1 unchanged attribute hidden)[0m[0m
+            },
+        ]
+      [32m+[0m[0m name                   = "allofap-prod-alb"
+      [32m+[0m[0m name_prefix            = (known after apply)
+      [32m+[0m[0m owner_id               = (known after apply)
+      [32m+[0m[0m revoke_rules_on_delete = false
+      [32m+[0m[0m tags_all               = {
+          [32m+[0m[0m "Environment" = "prod"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Project"     = "allofap"
+        }
+      [32m+[0m[0m vpc_id                 = "vpc-07ec2212fdebdd044"
+    }
+
+[1m  # module.api.aws_security_group.ecs[0m will be created
+[0m  [32m+[0m[0m resource "aws_security_group" "ecs" {
+      [32m+[0m[0m arn                    = (known after apply)
+      [32m+[0m[0m description            = "ECS tasks"
+      [32m+[0m[0m egress                 = [
+          [32m+[0m[0m {
+              [32m+[0m[0m cidr_blocks      = [
+                  [32m+[0m[0m "0.0.0.0/0",
+                ]
+              [32m+[0m[0m from_port        = 0
+              [32m+[0m[0m ipv6_cidr_blocks = []
+              [32m+[0m[0m prefix_list_ids  = []
+              [32m+[0m[0m protocol         = "-1"
+              [32m+[0m[0m security_groups  = []
+              [32m+[0m[0m self             = false
+              [32m+[0m[0m to_port          = 0
+                [90m# (1 unchanged attribute hidden)[0m[0m
+            },
+        ]
+      [32m+[0m[0m id                     = (known after apply)
+      [32m+[0m[0m ingress                = [
+          [32m+[0m[0m {
+              [32m+[0m[0m cidr_blocks      = []
+              [32m+[0m[0m from_port        = 8080
+              [32m+[0m[0m ipv6_cidr_blocks = []
+              [32m+[0m[0m prefix_list_ids  = []
+              [32m+[0m[0m protocol         = "tcp"
+              [32m+[0m[0m security_groups  = (known after apply)
+              [32m+[0m[0m self             = false
+              [32m+[0m[0m to_port          = 8080
+                [90m# (1 unchanged attribute hidden)[0m[0m
+            },
+        ]
+      [32m+[0m[0m name                   = "allofap-prod-ecs"
+      [32m+[0m[0m name_prefix            = (known after apply)
+      [32m+[0m[0m owner_id               = (known after apply)
+      [32m+[0m[0m revoke_rules_on_delete = false
+      [32m+[0m[0m tags_all               = {
+          [32m+[0m[0m "Environment" = "prod"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Project"     = "allofap"
+        }
+      [32m+[0m[0m vpc_id                 = "vpc-07ec2212fdebdd044"
+    }
+
+[1m  # module.api.aws_ssm_parameter.database_url[0m will be created
+[0m  [32m+[0m[0m resource "aws_ssm_parameter" "database_url" {
+      [32m+[0m[0m arn            = (known after apply)
+      [32m+[0m[0m data_type      = (known after apply)
+      [32m+[0m[0m has_value_wo   = (known after apply)
+      [32m+[0m[0m id             = (known after apply)
+      [32m+[0m[0m insecure_value = (known after apply)
+      [32m+[0m[0m key_id         = (known after apply)
+      [32m+[0m[0m name           = "/allofap/prod/DATABASE_URL"
+      [32m+[0m[0m tags_all       = {
+          [32m+[0m[0m "Environment" = "prod"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Project"     = "allofap"
+        }
+      [32m+[0m[0m tier           = (known after apply)
+      [32m+[0m[0m type           = "SecureString"
+      [32m+[0m[0m value          = (sensitive value)
+      [32m+[0m[0m value_wo       = (write-only attribute)
+      [32m+[0m[0m version        = (known after apply)
+    }
+
+[1m  # module.api.aws_ssm_parameter.session_secret[0m will be created
+[0m  [32m+[0m[0m resource "aws_ssm_parameter" "session_secret" {
+      [32m+[0m[0m arn            = (known after apply)
+      [32m+[0m[0m data_type      = (known after apply)
+      [32m+[0m[0m has_value_wo   = (known after apply)
+      [32m+[0m[0m id             = (known after apply)
+      [32m+[0m[0m insecure_value = (known after apply)
+      [32m+[0m[0m key_id         = (known after apply)
+      [32m+[0m[0m name           = "/allofap/prod/SESSION_SECRET"
+      [32m+[0m[0m tags_all       = {
+          [32m+[0m[0m "Environment" = "prod"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Project"     = "allofap"
+        }
+      [32m+[0m[0m tier           = (known after apply)
+      [32m+[0m[0m type           = "SecureString"
+      [32m+[0m[0m value          = (sensitive value)
+      [32m+[0m[0m value_wo       = (write-only attribute)
+      [32m+[0m[0m version        = (known after apply)
+    }
+
+[1m  # module.api.aws_ssm_parameter.shopify_webhook_secret[0m will be created
+[0m  [32m+[0m[0m resource "aws_ssm_parameter" "shopify_webhook_secret" {
+      [32m+[0m[0m arn            = (known after apply)
+      [32m+[0m[0m data_type      = (known after apply)
+      [32m+[0m[0m has_value_wo   = (known after apply)
+      [32m+[0m[0m id             = (known after apply)
+      [32m+[0m[0m insecure_value = (known after apply)
+      [32m+[0m[0m key_id         = (known after apply)
+      [32m+[0m[0m name           = "/allofap/prod/SHOPIFY_WEBHOOK_SECRET"
+      [32m+[0m[0m tags_all       = {
+          [32m+[0m[0m "Environment" = "prod"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Project"     = "allofap"
+        }
+      [32m+[0m[0m tier           = (known after apply)
+      [32m+[0m[0m type           = "SecureString"
+      [32m+[0m[0m value          = (sensitive value)
+      [32m+[0m[0m value_wo       = (write-only attribute)
+      [32m+[0m[0m version        = (known after apply)
+    }
+
+[1m  # module.frontend.data.aws_iam_policy_document.s3_policy[0m will be read during apply
+  # (config refers to values not yet known)
+[0m [36m<=[0m[0m data "aws_iam_policy_document" "s3_policy" {
+      [32m+[0m[0m id            = (known after apply)
+      [32m+[0m[0m json          = (known after apply)
+      [32m+[0m[0m minified_json = (known after apply)
+
+      [32m+[0m[0m statement {
+          [32m+[0m[0m actions   = [
+              [32m+[0m[0m "s3:GetObject",
+            ]
+          [32m+[0m[0m effect    = "Allow"
+          [32m+[0m[0m resources = [
+              [32m+[0m[0m (known after apply),
+            ]
+          [32m+[0m[0m sid       = "AllowCloudFront"
+
+          [32m+[0m[0m condition {
+              [32m+[0m[0m test     = "StringEquals"
+              [32m+[0m[0m values   = [
+                  [32m+[0m[0m (known after apply),
+                ]
+              [32m+[0m[0m variable = "AWS:SourceArn"
+            }
+
+          [32m+[0m[0m principals {
+              [32m+[0m[0m identifiers = [
+                  [32m+[0m[0m "cloudfront.amazonaws.com",
+                ]
+              [32m+[0m[0m type        = "Service"
+            }
+        }
+    }
+
+[1m  # module.frontend.aws_cloudfront_distribution.frontend[0m will be created
+[0m  [32m+[0m[0m resource "aws_cloudfront_distribution" "frontend" {
+      [32m+[0m[0m arn                             = (known after apply)
+      [32m+[0m[0m caller_reference                = (known after apply)
+      [32m+[0m[0m comment                         = "allofap prod"
+      [32m+[0m[0m continuous_deployment_policy_id = (known after apply)
+      [32m+[0m[0m default_root_object             = "index.html"
+      [32m+[0m[0m domain_name                     = (known after apply)
+      [32m+[0m[0m enabled                         = true
+      [32m+[0m[0m etag                            = (known after apply)
+      [32m+[0m[0m hosted_zone_id                  = (known after apply)
+      [32m+[0m[0m http_version                    = "http2"
+      [32m+[0m[0m id                              = (known after apply)
+      [32m+[0m[0m in_progress_validation_batches  = (known after apply)
+      [32m+[0m[0m is_ipv6_enabled                 = true
+      [32m+[0m[0m last_modified_time              = (known after apply)
+      [32m+[0m[0m price_class                     = "PriceClass_All"
+      [32m+[0m[0m retain_on_delete                = false
+      [32m+[0m[0m staging                         = false
+      [32m+[0m[0m status                          = (known after apply)
+      [32m+[0m[0m tags_all                        = {
+          [32m+[0m[0m "Environment" = "prod"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Project"     = "allofap"
+        }
+      [32m+[0m[0m trusted_key_groups              = (known after apply)
+      [32m+[0m[0m trusted_signers                 = (known after apply)
+      [32m+[0m[0m wait_for_deployment             = true
+
+      [32m+[0m[0m custom_error_response {
+          [32m+[0m[0m error_caching_min_ttl = 0
+          [32m+[0m[0m error_code            = 403
+          [32m+[0m[0m response_code         = 200
+          [32m+[0m[0m response_page_path    = "/index.html"
+        }
+      [32m+[0m[0m custom_error_response {
+          [32m+[0m[0m error_caching_min_ttl = 0
+          [32m+[0m[0m error_code            = 404
+          [32m+[0m[0m response_code         = 200
+          [32m+[0m[0m response_page_path    = "/index.html"
+        }
+
+      [32m+[0m[0m default_cache_behavior {
+          [32m+[0m[0m allowed_methods        = [
+              [32m+[0m[0m "GET",
+              [32m+[0m[0m "HEAD",
+              [32m+[0m[0m "OPTIONS",
+            ]
+          [32m+[0m[0m cached_methods         = [
+              [32m+[0m[0m "GET",
+              [32m+[0m[0m "HEAD",
+            ]
+          [32m+[0m[0m compress               = true
+          [32m+[0m[0m default_ttl            = (known after apply)
+          [32m+[0m[0m max_ttl                = (known after apply)
+          [32m+[0m[0m min_ttl                = 0
+          [32m+[0m[0m target_origin_id       = "s3-frontend"
+          [32m+[0m[0m trusted_key_groups     = (known after apply)
+          [32m+[0m[0m trusted_signers        = (known after apply)
+          [32m+[0m[0m viewer_protocol_policy = "redirect-to-https"
+
+          [32m+[0m[0m forwarded_values {
+              [32m+[0m[0m headers                 = (known after apply)
+              [32m+[0m[0m query_string            = false
+              [32m+[0m[0m query_string_cache_keys = (known after apply)
+
+              [32m+[0m[0m cookies {
+                  [32m+[0m[0m forward           = "none"
+                  [32m+[0m[0m whitelisted_names = (known after apply)
+                }
+            }
+
+          [32m+[0m[0m grpc_config (known after apply)
+        }
+
+      [32m+[0m[0m ordered_cache_behavior {
+          [32m+[0m[0m allowed_methods        = [
+              [32m+[0m[0m "DELETE",
+              [32m+[0m[0m "GET",
+              [32m+[0m[0m "HEAD",
+              [32m+[0m[0m "OPTIONS",
+              [32m+[0m[0m "PATCH",
+              [32m+[0m[0m "POST",
+              [32m+[0m[0m "PUT",
+            ]
+          [32m+[0m[0m cached_methods         = [
+              [32m+[0m[0m "GET",
+              [32m+[0m[0m "HEAD",
+            ]
+          [32m+[0m[0m compress               = true
+          [32m+[0m[0m default_ttl            = 0
+          [32m+[0m[0m max_ttl                = 0
+          [32m+[0m[0m min_ttl                = 0
+          [32m+[0m[0m path_pattern           = "/api/*"
+          [32m+[0m[0m target_origin_id       = "alb-api"
+          [32m+[0m[0m viewer_protocol_policy = "redirect-to-https"
+
+          [32m+[0m[0m forwarded_values {
+              [32m+[0m[0m headers                 = [
+                  [32m+[0m[0m "Accept",
+                  [32m+[0m[0m "Authorization",
+                  [32m+[0m[0m "Content-Type",
+                  [32m+[0m[0m "Host",
+                  [32m+[0m[0m "Origin",
+                  [32m+[0m[0m "Referer",
+                  [32m+[0m[0m "X-Forwarded-Proto",
+                ]
+              [32m+[0m[0m query_string            = true
+              [32m+[0m[0m query_string_cache_keys = (known after apply)
+
+              [32m+[0m[0m cookies {
+                  [32m+[0m[0m forward = "all"
+                }
+            }
+
+          [32m+[0m[0m grpc_config (known after apply)
+        }
+
+      [32m+[0m[0m origin {
+          [32m+[0m[0m connection_attempts      = 3
+          [32m+[0m[0m connection_timeout       = 10
+          [32m+[0m[0m domain_name              = (known after apply)
+          [32m+[0m[0m origin_id                = "alb-api"
+            [90m# (2 unchanged attributes hidden)[0m[0m
+
+          [32m+[0m[0m custom_origin_config {
+              [32m+[0m[0m http_port                = 80
+              [32m+[0m[0m https_port               = 443
+              [32m+[0m[0m origin_keepalive_timeout = 5
+              [32m+[0m[0m origin_protocol_policy   = "http-only"
+              [32m+[0m[0m origin_read_timeout      = 30
+              [32m+[0m[0m origin_ssl_protocols     = [
+                  [32m+[0m[0m "TLSv1.2",
+                ]
+            }
+        }
+      [32m+[0m[0m origin {
+          [32m+[0m[0m connection_attempts      = 3
+          [32m+[0m[0m connection_timeout       = 10
+          [32m+[0m[0m domain_name              = (known after apply)
+          [32m+[0m[0m origin_access_control_id = (known after apply)
+          [32m+[0m[0m origin_id                = "s3-frontend"
+            [90m# (1 unchanged attribute hidden)[0m[0m
+        }
+
+      [32m+[0m[0m restrictions {
+          [32m+[0m[0m geo_restriction {
+              [32m+[0m[0m locations        = (known after apply)
+              [32m+[0m[0m restriction_type = "none"
+            }
+        }
+
+      [32m+[0m[0m viewer_certificate {
+          [32m+[0m[0m cloudfront_default_certificate = true
+          [32m+[0m[0m minimum_protocol_version       = "TLSv1"
+        }
+    }
+
+[1m  # module.frontend.aws_cloudfront_origin_access_control.frontend[0m will be created
+[0m  [32m+[0m[0m resource "aws_cloudfront_origin_access_control" "frontend" {
+      [32m+[0m[0m arn                               = (known after apply)
+      [32m+[0m[0m description                       = "Managed by Terraform"
+      [32m+[0m[0m etag                              = (known after apply)
+      [32m+[0m[0m id                                = (known after apply)
+      [32m+[0m[0m name                              = "allofap-prod-oac"
+      [32m+[0m[0m origin_access_control_origin_type = "s3"
+      [32m+[0m[0m signing_behavior                  = "always"
+      [32m+[0m[0m signing_protocol                  = "sigv4"
+    }
+
+[1m  # module.frontend.aws_s3_bucket.frontend[0m will be created
+[0m  [32m+[0m[0m resource "aws_s3_bucket" "frontend" {
+      [32m+[0m[0m acceleration_status         = (known after apply)
+      [32m+[0m[0m acl                         = (known after apply)
+      [32m+[0m[0m arn                         = (known after apply)
+      [32m+[0m[0m bucket                      = "allofap-prod-frontend-euw3"
+      [32m+[0m[0m bucket_domain_name          = (known after apply)
+      [32m+[0m[0m bucket_prefix               = (known after apply)
+      [32m+[0m[0m bucket_regional_domain_name = (known after apply)
+      [32m+[0m[0m force_destroy               = false
+      [32m+[0m[0m hosted_zone_id              = (known after apply)
+      [32m+[0m[0m id                          = (known after apply)
+      [32m+[0m[0m object_lock_enabled         = (known after apply)
+      [32m+[0m[0m policy                      = (known after apply)
+      [32m+[0m[0m region                      = (known after apply)
+      [32m+[0m[0m request_payer               = (known after apply)
+      [32m+[0m[0m tags_all                    = {
+          [32m+[0m[0m "Environment" = "prod"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Project"     = "allofap"
+        }
+      [32m+[0m[0m website_domain              = (known after apply)
+      [32m+[0m[0m website_endpoint            = (known after apply)
+
+      [32m+[0m[0m cors_rule (known after apply)
+
+      [32m+[0m[0m grant (known after apply)
+
+      [32m+[0m[0m lifecycle_rule (known after apply)
+
+      [32m+[0m[0m logging (known after apply)
+
+      [32m+[0m[0m object_lock_configuration (known after apply)
+
+      [32m+[0m[0m replication_configuration (known after apply)
+
+      [32m+[0m[0m server_side_encryption_configuration (known after apply)
+
+      [32m+[0m[0m versioning (known after apply)
+
+      [32m+[0m[0m website (known after apply)
+    }
+
+[1m  # module.frontend.aws_s3_bucket_policy.frontend[0m will be created
+[0m  [32m+[0m[0m resource "aws_s3_bucket_policy" "frontend" {
+      [32m+[0m[0m bucket = (known after apply)
+      [32m+[0m[0m id     = (known after apply)
+      [32m+[0m[0m policy = (known after apply)
+    }
+
+[1m  # module.frontend.aws_s3_bucket_public_access_block.frontend[0m will be created
+[0m  [32m+[0m[0m resource "aws_s3_bucket_public_access_block" "frontend" {
+      [32m+[0m[0m block_public_acls       = true
+      [32m+[0m[0m block_public_policy     = true
+      [32m+[0m[0m bucket                  = (known after apply)
+      [32m+[0m[0m id                      = (known after apply)
+      [32m+[0m[0m ignore_public_acls      = true
+      [32m+[0m[0m restrict_public_buckets = true
+    }
+
+[1m  # module.frontend.aws_s3_bucket_versioning.frontend[0m will be created
+[0m  [32m+[0m[0m resource "aws_s3_bucket_versioning" "frontend" {
+      [32m+[0m[0m bucket = (known after apply)
+      [32m+[0m[0m id     = (known after apply)
+
+      [32m+[0m[0m versioning_configuration {
+          [32m+[0m[0m mfa_delete = (known after apply)
+          [32m+[0m[0m status     = "Enabled"
+        }
+    }
+
+[1m  # module.media_storage.data.aws_iam_policy_document.public_read[0m will be read during apply
+  # (config refers to values not yet known)
+[0m [36m<=[0m[0m data "aws_iam_policy_document" "public_read" {
+      [32m+[0m[0m id            = (known after apply)
+      [32m+[0m[0m json          = (known after apply)
+      [32m+[0m[0m minified_json = (known after apply)
+
+      [32m+[0m[0m statement {
+          [32m+[0m[0m actions   = [
+              [32m+[0m[0m "s3:GetObject",
+            ]
+          [32m+[0m[0m effect    = "Allow"
+          [32m+[0m[0m resources = [
+              [32m+[0m[0m (known after apply),
+            ]
+          [32m+[0m[0m sid       = "PublicReadInterventions"
+
+          [32m+[0m[0m principals {
+              [32m+[0m[0m identifiers = [
+                  [32m+[0m[0m "*",
+                ]
+              [32m+[0m[0m type        = "*"
+            }
+        }
+    }
+
+[1m  # module.media_storage.aws_s3_bucket.medias[0m will be created
+[0m  [32m+[0m[0m resource "aws_s3_bucket" "medias" {
+      [32m+[0m[0m acceleration_status         = (known after apply)
+      [32m+[0m[0m acl                         = (known after apply)
+      [32m+[0m[0m arn                         = (known after apply)
+      [32m+[0m[0m bucket                      = "allofap-prod-medias-euw3"
+      [32m+[0m[0m bucket_domain_name          = (known after apply)
+      [32m+[0m[0m bucket_prefix               = (known after apply)
+      [32m+[0m[0m bucket_regional_domain_name = (known after apply)
+      [32m+[0m[0m force_destroy               = false
+      [32m+[0m[0m hosted_zone_id              = (known after apply)
+      [32m+[0m[0m id                          = (known after apply)
+      [32m+[0m[0m object_lock_enabled         = (known after apply)
+      [32m+[0m[0m policy                      = (known after apply)
+      [32m+[0m[0m region                      = (known after apply)
+      [32m+[0m[0m request_payer               = (known after apply)
+      [32m+[0m[0m tags_all                    = {
+          [32m+[0m[0m "Environment" = "prod"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Project"     = "allofap"
+        }
+      [32m+[0m[0m website_domain              = (known after apply)
+      [32m+[0m[0m website_endpoint            = (known after apply)
+
+      [32m+[0m[0m cors_rule (known after apply)
+
+      [32m+[0m[0m grant (known after apply)
+
+      [32m+[0m[0m lifecycle_rule (known after apply)
+
+      [32m+[0m[0m logging (known after apply)
+
+      [32m+[0m[0m object_lock_configuration (known after apply)
+
+      [32m+[0m[0m replication_configuration (known after apply)
+
+      [32m+[0m[0m server_side_encryption_configuration (known after apply)
+
+      [32m+[0m[0m versioning (known after apply)
+
+      [32m+[0m[0m website (known after apply)
+    }
+
+[1m  # module.media_storage.aws_s3_bucket_cors_configuration.medias[0m will be created
+[0m  [32m+[0m[0m resource "aws_s3_bucket_cors_configuration" "medias" {
+      [32m+[0m[0m bucket = (known after apply)
+      [32m+[0m[0m id     = (known after apply)
+
+      [32m+[0m[0m cors_rule {
+          [32m+[0m[0m allowed_headers = [
+              [32m+[0m[0m "*",
+            ]
+          [32m+[0m[0m allowed_methods = [
+              [32m+[0m[0m "GET",
+              [32m+[0m[0m "HEAD",
+            ]
+          [32m+[0m[0m allowed_origins = [
+              [32m+[0m[0m "*",
+            ]
+          [32m+[0m[0m expose_headers  = []
+            id              = [90mnull[0m[0m
+          [32m+[0m[0m max_age_seconds = 3600
+        }
+    }
+
+[1m  # module.media_storage.aws_s3_bucket_policy.medias[0m will be created
+[0m  [32m+[0m[0m resource "aws_s3_bucket_policy" "medias" {
+      [32m+[0m[0m bucket = (known after apply)
+      [32m+[0m[0m id     = (known after apply)
+      [32m+[0m[0m policy = (known after apply)
+    }
+
+[1m  # module.media_storage.aws_s3_bucket_public_access_block.medias[0m will be created
+[0m  [32m+[0m[0m resource "aws_s3_bucket_public_access_block" "medias" {
+      [32m+[0m[0m block_public_acls       = true
+      [32m+[0m[0m block_public_policy     = false
+      [32m+[0m[0m bucket                  = (known after apply)
+      [32m+[0m[0m id                      = (known after apply)
+      [32m+[0m[0m ignore_public_acls      = true
+      [32m+[0m[0m restrict_public_buckets = false
+    }
+
+[1m  # module.media_storage.aws_s3_bucket_server_side_encryption_configuration.medias[0m will be created
+[0m  [32m+[0m[0m resource "aws_s3_bucket_server_side_encryption_configuration" "medias" {
+      [32m+[0m[0m bucket = (known after apply)
+      [32m+[0m[0m id     = (known after apply)
+
+      [32m+[0m[0m rule {
+          [32m+[0m[0m apply_server_side_encryption_by_default {
+              [32m+[0m[0m sse_algorithm     = "AES256"
+                [90m# (1 unchanged attribute hidden)[0m[0m
+            }
+        }
+    }
+
+[1m  # module.media_storage.aws_s3_bucket_versioning.medias[0m will be created
+[0m  [32m+[0m[0m resource "aws_s3_bucket_versioning" "medias" {
+      [32m+[0m[0m bucket = (known after apply)
+      [32m+[0m[0m id     = (known after apply)
+
+      [32m+[0m[0m versioning_configuration {
+          [32m+[0m[0m mfa_delete = (known after apply)
+          [32m+[0m[0m status     = "Enabled"
+        }
+    }
+
+[1mPlan:[0m [0m32 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  [33m~[0m[0m cloudfront_distribution_id = "E1GLXTPFOPPO6" -> (known after apply)
+  [33m~[0m[0m ecr_repository_url         = "503789396714.dkr.ecr.us-west-2.amazonaws.com/allofap-prod-api" -> (known after apply)
+  [33m~[0m[0m frontend_bucket            = "allofap-prod-frontend" -> (known after apply)
+  [32m+[0m[0m medias_bucket              = (known after apply)
+  [32m+[0m[0m medias_public_url_prefix   = (known after apply)
+  [33m~[0m[0m website_url                = "https://d2gd5cpo49tihx.cloudfront.net" -> (known after apply)
+[0m[1mmodule.frontend.aws_cloudfront_origin_access_control.frontend: Creating...[0m[0m
+[0m[1mmodule.api.aws_cloudwatch_log_group.api: Creating...[0m[0m
+[0m[1mmodule.api.aws_iam_role.ecs_execution: Creating...[0m[0m
+[0m[1mmodule.api.aws_ssm_parameter.session_secret: Creating...[0m[0m
+[0m[1mmodule.api.aws_ssm_parameter.shopify_webhook_secret: Creating...[0m[0m
+[0m[1mmodule.api.aws_iam_role.ecs_task: Creating...[0m[0m
+[0m[1mmodule.api.aws_ecs_cluster.api: Creating...[0m[0m
+[0m[1mmodule.api.aws_ecr_repository.api: Creating...[0m[0m
+[0m[1mmodule.frontend.aws_s3_bucket.frontend: Creating...[0m[0m
+[0m[1mmodule.media_storage.aws_s3_bucket.medias: Creating...[0m[0m
+[0m[1mmodule.api.aws_ssm_parameter.database_url: Creating...[0m[0m
+[0m[1mmodule.api.aws_ecr_repository.api: Creation complete after 2s [id=allofap-prod-api][0m
+[0m[1mmodule.api.aws_security_group.alb: Creating...[0m[0m
+[0m[1mmodule.api.aws_ssm_parameter.session_secret: Creation complete after 2s [id=/allofap/prod/SESSION_SECRET][0m
+[0m[1mmodule.api.aws_lb_target_group.api: Creating...[0m[0m
+[0m[1mmodule.api.aws_ecr_lifecycle_policy.api: Creating...[0m[0m
+[0m[1mmodule.api.aws_ssm_parameter.shopify_webhook_secret: Creation complete after 2s [id=/allofap/prod/SHOPIFY_WEBHOOK_SECRET][0m
+[0m[1mmodule.api.aws_ecr_lifecycle_policy.api: Creation complete after 1s [id=allofap-prod-api][0m
+[0m[1mmodule.api.aws_ssm_parameter.database_url: Creation complete after 1s [id=/allofap/prod/DATABASE_URL][0m
+[0m[1mmodule.api.aws_cloudwatch_log_group.api: Creation complete after 3s [id=/ecs/allofap-prod-api][0m
+[0m[1mmodule.api.aws_lb_target_group.api: Creation complete after 4s [id=arn:aws:elasticloadbalancing:eu-west-3:503789396714:targetgroup/allofap-prod-api/0db4cc4fd0969f5b][0m
+[0m[1mmodule.media_storage.aws_s3_bucket.medias: Creation complete after 6s [id=allofap-prod-medias-euw3][0m
+[0m[1mmodule.media_storage.data.aws_iam_policy_document.public_read: Reading...[0m[0m
+[0m[1mmodule.media_storage.aws_s3_bucket_public_access_block.medias: Creating...[0m[0m
+[0m[1mmodule.media_storage.aws_s3_bucket_server_side_encryption_configuration.medias: Creating...[0m[0m
+[0m[1mmodule.media_storage.aws_s3_bucket_versioning.medias: Creating...[0m[0m
+[0m[1mmodule.media_storage.aws_s3_bucket_cors_configuration.medias: Creating...[0m[0m
+[0m[1mmodule.media_storage.data.aws_iam_policy_document.public_read: Read complete after 0s [id=3721738530][0m
+[0m[1mmodule.frontend.aws_s3_bucket.frontend: Creation complete after 6s [id=allofap-prod-frontend-euw3][0m
+[0m[1mmodule.frontend.aws_s3_bucket_public_access_block.frontend: Creating...[0m[0m
+[0m[1mmodule.frontend.aws_s3_bucket_versioning.frontend: Creating...[0m[0m
+[0m[1mmodule.api.aws_security_group.alb: Creation complete after 5s [id=sg-07f4f0e0982ebcfed][0m
+[0m[1mmodule.api.aws_security_group.ecs: Creating...[0m[0m
+[0m[1mmodule.api.aws_lb.api: Creating...[0m[0m
+[0m[1mmodule.media_storage.aws_s3_bucket_public_access_block.medias: Creation complete after 1s [id=allofap-prod-medias-euw3][0m
+[0m[1mmodule.media_storage.aws_s3_bucket_policy.medias: Creating...[0m[0m
+[0m[1mmodule.frontend.aws_s3_bucket_public_access_block.frontend: Creation complete after 1s [id=allofap-prod-frontend-euw3][0m
+[0m[1mmodule.media_storage.aws_s3_bucket_cors_configuration.medias: Creation complete after 2s [id=allofap-prod-medias-euw3][0m
+[0m[1mmodule.media_storage.aws_s3_bucket_policy.medias: Creation complete after 1s [id=allofap-prod-medias-euw3][0m
+[0m[1mmodule.frontend.aws_s3_bucket_versioning.frontend: Creation complete after 3s [id=allofap-prod-frontend-euw3][0m
+[0m[1mmodule.media_storage.aws_s3_bucket_versioning.medias: Creation complete after 3s [id=allofap-prod-medias-euw3][0m
+[0m[1mmodule.media_storage.aws_s3_bucket_server_side_encryption_configuration.medias: Creation complete after 3s [id=allofap-prod-medias-euw3][0m
+[0m[1mmodule.api.aws_ecs_cluster.api: Still creating... [00m10s elapsed][0m[0m
+[0m[1mmodule.api.aws_security_group.ecs: Creation complete after 4s [id=sg-0c065ac9af4ab3985][0m
+[0m[1mmodule.api.aws_ecs_cluster.api: Creation complete after 13s [id=arn:aws:ecs:eu-west-3:503789396714:cluster/allofap-prod][0m
+[0m[1mmodule.api.aws_lb.api: Still creating... [00m10s elapsed][0m[0m
+[0m[1mmodule.api.aws_lb.api: Still creating... [00m20s elapsed][0m[0m
+[0m[1mmodule.api.aws_lb.api: Still creating... [00m30s elapsed][0m[0m
+[0m[1mmodule.api.aws_lb.api: Still creating... [00m40s elapsed][0m[0m
+[0m[1mmodule.api.aws_lb.api: Still creating... [00m50s elapsed][0m[0m
+[0m[1mmodule.api.aws_lb.api: Still creating... [01m00s elapsed][0m[0m
+[0m[1mmodule.api.aws_lb.api: Still creating... [01m10s elapsed][0m[0m
+[0m[1mmodule.api.aws_lb.api: Still creating... [01m20s elapsed][0m[0m
+[0m[1mmodule.api.aws_lb.api: Still creating... [01m30s elapsed][0m[0m
+[0m[1mmodule.api.aws_lb.api: Still creating... [01m40s elapsed][0m[0m
+[0m[1mmodule.api.aws_lb.api: Still creating... [01m50s elapsed][0m[0m
+[0m[1mmodule.api.aws_lb.api: Still creating... [02m00s elapsed][0m[0m
+[0m[1mmodule.api.aws_lb.api: Still creating... [02m10s elapsed][0m[0m
+[0m[1mmodule.api.aws_lb.api: Still creating... [02m20s elapsed][0m[0m
+[0m[1mmodule.api.aws_lb.api: Still creating... [02m30s elapsed][0m[0m
+[0m[1mmodule.api.aws_lb.api: Still creating... [02m40s elapsed][0m[0m
+[0m[1mmodule.api.aws_lb.api: Still creating... [02m50s elapsed][0m[0m
+[0m[1mmodule.api.aws_lb.api: Still creating... [03m00s elapsed][0m[0m
+[0m[1mmodule.api.aws_lb.api: Creation complete after 3m6s [id=arn:aws:elasticloadbalancing:eu-west-3:503789396714:loadbalancer/app/allofap-prod-api/550d859769439378][0m
+[0m[1mmodule.api.aws_lb_listener.http: Creating...[0m[0m
+[0m[1mmodule.api.aws_lb_listener.http: Creation complete after 1s [id=arn:aws:elasticloadbalancing:eu-west-3:503789396714:listener/app/allofap-prod-api/550d859769439378/ded4dc516cb9de84][0m
+[31m╷[0m[0m
+[31m│[0m [0m[1m[31mError: [0m[0m[1mcreating IAM Role (allofap-prod-ecs-execution): operation error IAM: CreateRole, https response error StatusCode: 409, RequestID: 80647348-3727-47b0-a7e6-fe7a8dd1677f, EntityAlreadyExists: Role with name allofap-prod-ecs-execution already exists.[0m
+[31m│[0m [0m
+[31m│[0m [0m[0m  with module.api.aws_iam_role.ecs_execution,
+[31m│[0m [0m  on ../../modules/api-ecs/main.tf line 140, in resource "aws_iam_role" "ecs_execution":
+[31m│[0m [0m 140: resource "aws_iam_role" "ecs_execution" [4m{[0m[0m
+[31m│[0m [0m
+[31m╵[0m[0m
+[31m╷[0m[0m
+[31m│[0m [0m[1m[31mError: [0m[0m[1mcreating IAM Role (allofap-prod-ecs-task): operation error IAM: CreateRole, https response error StatusCode: 409, RequestID: 8cffa244-2b99-4d08-b5b4-2a1d1e0a4f82, EntityAlreadyExists: Role with name allofap-prod-ecs-task already exists.[0m
+[31m│[0m [0m
+[31m│[0m [0m[0m  with module.api.aws_iam_role.ecs_task,
+[31m│[0m [0m  on ../../modules/api-ecs/main.tf line 198, in resource "aws_iam_role" "ecs_task":
+[31m│[0m [0m 198: resource "aws_iam_role" "ecs_task" [4m{[0m[0m
+[31m│[0m [0m
+[31m╵[0m[0m
+[31m╷[0m[0m
+[31m│[0m [0m[1m[31mError: [0m[0m[1mcreating CloudFront Origin Access Control (allofap-prod-oac): operation error CloudFront: CreateOriginAccessControl, https response error StatusCode: 409, RequestID: 12b686dc-77e0-4536-b568-fbefa9f32200, OriginAccessControlAlreadyExists: An origin access control with the same name already exists.[0m
+[31m│[0m [0m
+[31m│[0m [0m[0m  with module.frontend.aws_cloudfront_origin_access_control.frontend,
+[31m│[0m [0m  on ../../modules/static-frontend/main.tf line 30, in resource "aws_cloudfront_origin_access_control" "frontend":
+[31m│[0m [0m  30: resource "aws_cloudfront_origin_access_control" "frontend" [4m{[0m[0m
+[31m│[0m [0m
+[31m╵[0m[0m
+Releasing state lock. This may take a few moments...
