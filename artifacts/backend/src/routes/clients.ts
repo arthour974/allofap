@@ -2,6 +2,9 @@ import { Router, type IRouter } from "express";
 import { db, clientsTable } from "@workspace/db";
 import { eq, ilike, or, sql } from "drizzle-orm";
 import { CreateClientBody, UpdateClientBody } from "@workspace/api-zod";
+import { deleteClientById } from "../lib/delete-client.js";
+import { isForeignKeyViolation } from "../lib/db-errors.js";
+import { logger } from "../lib/logger.js";
 
 const router: IRouter = Router();
 
@@ -89,6 +92,38 @@ router.put("/clients/:id", async (req, res) => {
   }
 
   res.json(client);
+});
+
+router.delete("/clients/:id", async (req, res) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "BAD_REQUEST", message: "ID invalide" });
+    return;
+  }
+
+  try {
+    const deleted = await deleteClientById(id);
+    if (!deleted) {
+      res.status(404).json({ error: "NOT_FOUND", message: "Client introuvable" });
+      return;
+    }
+
+    res.json({ message: "Client supprimé" });
+  } catch (err) {
+    if (isForeignKeyViolation(err)) {
+      res.status(409).json({
+        error: "CONFLICT",
+        message: "Impossible de supprimer ce client : des données liées existent encore.",
+      });
+      return;
+    }
+
+    logger.error({ err, clientId: id }, "Erreur suppression client");
+    res.status(500).json({
+      error: "INTERNAL_SERVER_ERROR",
+      message: "Impossible de supprimer le client",
+    });
+  }
 });
 
 export default router;

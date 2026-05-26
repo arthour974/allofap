@@ -1,4 +1,22 @@
 {
   "typescript.tsdk": "node_modules/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+
+  "tailwindCSS.experimental.configFile": "artifacts/frontend/src/index.css",
+  "tailwindCSS.includeLanguages": {
+    "typescript": "javascript",
+    "typescriptreact": "javascript"
+  },
+  "tailwindCSS.classFunctions": ["cn", "cva"],
+  "tailwindCSS.validate": true,
+  "editor.quickSuggestions": {
+    "strings": "on"
+  },
+  "css.validate": false,
+
+  "editor.suggest.showWords": false,
+  "files.associations": {
+    "*.css": "tailwindcss"
+  }
 }

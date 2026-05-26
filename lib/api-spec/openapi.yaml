@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: Api
   version: 0.1.0
-  description: FAP Expert - API de suivi de nettoyage de filtres à particules
+  description: AlloFAP - API de suivi de nettoyage de filtres à particules
 servers:
   - url: /api
     description: Base API path
@@ -137,7 +137,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Client"
-
+       
   /clients/{id}:
     get:
       operationId: getClient
@@ -185,7 +185,28 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Client"
-
+    delete:
+      operationId: deleteClient
+      summary: Supprimer un client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Clien supprimée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "404":
+          description: Client non trouvée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /vehicules:
     get:
       operationId: listVehicules
@@ -565,6 +586,88 @@ paths:
               schema:
                 $ref: "#/components/schemas/DashboardStats"
 
+  /interventions/{id}/partage:
+    post:
+      operationId: creerLienPartageIntervention
+      tags: [interventions]
+      summary: Obtenir ou régénérer le lien de suivi client (disponible dès la création du dossier)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: regenerate
+          in: query
+          required: false
+          description: Si true, invalide l'ancien lien et en crée un nouveau
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "200":
+          description: Lien de partage créé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PartageInterventionResponse"
+        "404":
+          description: Intervention non trouvée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Erreur métier
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /public/interventions/{token}:
+    get:
+      operationId: getInterventionPartage
+      tags: [interventions]
+      summary: Suivre un dossier partagé (lecture seule, sans authentification, à tout stade)
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Dossier partagé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterventionPartagePublic"
+        "404":
+          description: Lien invalide ou expiré
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /public/interventions/{token}/rapport-pdf:
+    get:
+      operationId: telechargerRapportPartage
+      tags: [interventions]
+      summary: Télécharger le rapport PDF via le lien de partage
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Rapport HTML/PDF
+          content:
+            text/html:
+              schema:
+                type: string
+
   /statistiques/kanban:
     get:
       operationId: getKanbanData
@@ -925,6 +1028,7 @@ components:
           $ref: "#/components/schemas/Client"
         vehicule:
           $ref: "#/components/schemas/Vehicule"
+          nullable: true
         alerte:
           type: string
           nullable: true
@@ -938,7 +1042,6 @@ components:
         - dateCreation
         - updatedAt
         - client
-        - vehicule
 
     InterventionDetail:
       type: object
@@ -1085,10 +1188,18 @@ components:
           $ref: "#/components/schemas/Client"
         vehicule:
           $ref: "#/components/schemas/Vehicule"
+          nullable: true
         medias:
           type: array
           items:
             $ref: "#/components/schemas/Media"
+        shareToken:
+          type: string
+          nullable: true
+        shareTokenCreatedAt:
+          type: string
+          format: date-time
+          nullable: true
         updatedAt:
           type: string
           format: date-time
@@ -1098,9 +1209,102 @@ components:
         - statut
         - dateCreation
         - client
-        - vehicule
         - medias
         - updatedAt
+
+    InterventionPartagePublic:
+      type: object
+      description: Vue client en lecture seule — suivi de l'avancement du dossier
+      properties:
+        numeroDossier:
+          type: string
+        statut:
+          $ref: "#/components/schemas/StatutIntervention"
+        dateCreation:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        dateCloture:
+          type: string
+          format: date-time
+          nullable: true
+        client:
+          $ref: "#/components/schemas/Client"
+        vehicule:
+          $ref: "#/components/schemas/Vehicule"
+          nullable: true
+        poidsEntreeG:
+          type: number
+          nullable: true
+        poidsSortieG:
+          type: number
+          nullable: true
+        pressionEntreeMbar:
+          type: number
+          nullable: true
+        pressionSortieMbar:
+          type: number
+          nullable: true
+        masseExtraiteg:
+          type: number
+          nullable: true
+        efficacitePrensionPourcent:
+          type: number
+          nullable: true
+        diagnosticAccessoires:
+          $ref: "#/components/schemas/DiagnosticAccessoires"
+          nullable: true
+        diagnosticCeramique:
+          $ref: "#/components/schemas/DiagnosticCeramique"
+          nullable: true
+        resultatFinal:
+          $ref: "#/components/schemas/ResultatFinal"
+          nullable: true
+        observationAtelier:
+          type: string
+          nullable: true
+        preconisationCapteurPression:
+          type: boolean
+        preconisationEgr:
+          type: boolean
+        preconisationRegenerationAutoroute:
+          type: boolean
+        preconisationControlInjecteurs:
+          type: boolean
+        preconisationControlTurbo:
+          type: boolean
+        preconisationControlConsommationHuile:
+          type: boolean
+        rapportPdfUrl:
+          type: string
+          nullable: true
+        medias:
+          type: array
+          items:
+            $ref: "#/components/schemas/Media"
+      required:
+        - numeroDossier
+        - statut
+        - dateCreation
+        - updatedAt
+        - client
+        - medias
+
+    PartageInterventionResponse:
+      type: object
+      properties:
+        shareToken:
+          type: string
+        shareUrl:
+          type: string
+        message:
+          type: string
+      required:
+        - shareToken
+        - shareUrl
+        - message
 
     InterventionsListResponse:
       type: object
@@ -1215,6 +1419,15 @@ components:
           nullable: true
         signatureClientUrl:
           type: string
+          nullable: true
+        statut:
+          $ref: "#/components/schemas/StatutIntervention"
+          nullable: true
+        vehiculeId:
+          type: integer
+          nullable: true
+        clientId:
+          type: integer
           nullable: true
 
     Media:

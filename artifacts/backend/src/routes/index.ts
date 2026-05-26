@@ -6,10 +6,12 @@ import vehiculesRouter from "./vehicules";
 import interventionsRouter from "./interventions";
 import mediasRouter from "./medias";
 import statistiquesRouter from "./statistiques";
+import publicRouter from "./public";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(publicRouter);
 router.use(authRouter);
 router.use(clientsRouter);
 router.use(vehiculesRouter);
